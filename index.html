@@ -24,7 +24,6 @@
             --text-secondary: #a0a0b0;
             --text-muted: #606070;
             --waveform-bg: #151519;
-            --waveform-center: #1e1e24;
             --selection: rgba(0, 212, 168, 0.3);
             --selection-border: #00d4aa;
             --danger: #ff4444;
@@ -41,7 +40,7 @@
             font-size: 14px;
         }
 
-        /* Header */
+        /* Header - Fixed at top */
         .header {
             height: 60px;
             background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
@@ -50,6 +49,7 @@
             align-items: center;
             padding: 0 20px;
             gap: 20px;
+            flex-shrink: 0;
         }
 
         .brand {
@@ -182,21 +182,40 @@
             border-color: var(--accent);
         }
 
-        /* Main Layout */
+        /* Main Layout - Flex column */
         .main {
-            display: grid;
-            grid-template-rows: 45px 1fr 180px;
+            display: flex;
+            flex-direction: column;
             height: calc(100vh - 60px);
+            overflow: hidden;
         }
 
-        /* Toolbar */
+        /* Toolbar - Scrollable horizontally */
         .toolbar {
             background: var(--bg-secondary);
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
-            padding: 0 15px;
+            padding: 8px 15px;
             gap: 5px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            flex-shrink: 0;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) var(--bg-secondary);
+        }
+
+        .toolbar::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .toolbar::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        .toolbar::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
         }
 
         .tool-group {
@@ -205,6 +224,7 @@
             padding-right: 15px;
             margin-right: 15px;
             border-right: 1px solid var(--border);
+            flex-shrink: 0;
         }
 
         .tool {
@@ -219,6 +239,8 @@
             align-items: center;
             gap: 6px;
             transition: all 0.15s;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .tool:hover {
@@ -237,6 +259,7 @@
             align-items: center;
             gap: 8px;
             margin-left: auto;
+            flex-shrink: 0;
         }
 
         .zoom-slider {
@@ -257,19 +280,22 @@
             cursor: pointer;
         }
 
-        /* Editor Area */
+        /* Editor Area - Takes remaining space */
         .editor {
             display: grid;
             grid-template-columns: 240px 1fr;
+            flex: 1;
             overflow: hidden;
+            min-height: 0;
         }
 
-        /* Track Panel */
+        /* Track Panel - Scrollable */
         .track-panel {
             background: var(--bg-secondary);
             border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
 
         .panel-header {
@@ -278,6 +304,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-shrink: 0;
         }
 
         .panel-title {
@@ -310,6 +337,7 @@
         .tracks-list {
             flex: 1;
             overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .track {
@@ -421,6 +449,7 @@
             flex-direction: column;
             background: var(--waveform-bg);
             overflow: hidden;
+            min-width: 0;
         }
 
         .timeline-header {
@@ -429,6 +458,7 @@
             border-bottom: 1px solid var(--border);
             position: relative;
             overflow: hidden;
+            flex-shrink: 0;
         }
 
         .timeline-tracks {
@@ -442,6 +472,7 @@
             border-bottom: 1px solid var(--border);
             position: relative;
             background: var(--waveform-bg);
+            flex-shrink: 0;
         }
 
         .timeline-track:nth-child(even) {
@@ -452,20 +483,6 @@
             position: relative;
             height: 100%;
             overflow: hidden;
-        }
-
-        /* Waveform Display */
-        .waveform-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-        }
-
-        .waveform-canvas {
-            width: 100%;
-            height: 100%;
         }
 
         /* Audio Clip */
@@ -510,7 +527,7 @@
         .clip-waveform {
             width: 100%;
             height: 100%;
-            opacity: 0.9;
+            display: block;
         }
 
         .clip-info {
@@ -541,18 +558,6 @@
 
         .clip-handle.left { left: 0; }
         .clip-handle.right { right: 0; }
-
-        /* Selection */
-        .selection {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            background: var(--selection);
-            border-left: 2px solid var(--selection-border);
-            border-right: 2px solid var(--selection-border);
-            pointer-events: none;
-            z-index: 10;
-        }
 
         /* Playhead */
         .playhead {
@@ -606,217 +611,6 @@
             width: 2px;
         }
 
-        .grid-label {
-            position: absolute;
-            top: 8px;
-            font-size: 10px;
-            color: var(--text-muted);
-            transform: translateX(-50%);
-        }
-
-        /* Effects Panel */
-        .effects-panel {
-            background: var(--bg-secondary);
-            border-top: 1px solid var(--border);
-            display: grid;
-            grid-template-columns: 200px 1fr;
-        }
-
-        .effects-list {
-            border-right: 1px solid var(--border);
-            padding: 15px;
-            overflow-y: auto;
-        }
-
-        .effect-slot {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-
-        .effect-slot:hover {
-            border-color: var(--accent);
-            background: var(--bg-hover);
-        }
-
-        .effect-slot.active {
-            border-color: var(--accent);
-            background: rgba(0, 212, 168, 0.1);
-        }
-
-        .effect-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-
-        .effect-icon {
-            width: 24px;
-            height: 24px;
-            border-radius: 4px;
-            background: var(--bg-secondary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-        }
-
-        .effect-name {
-            font-weight: 600;
-            font-size: 12px;
-        }
-
-        .effect-toggle {
-            margin-left: auto;
-            width: 32px;
-            height: 18px;
-            background: var(--bg-secondary);
-            border-radius: 9px;
-            position: relative;
-            cursor: pointer;
-        }
-
-        .effect-toggle.active {
-            background: var(--accent);
-        }
-
-        .effect-toggle::after {
-            content: '';
-            position: absolute;
-            width: 14px;
-            height: 14px;
-            background: white;
-            border-radius: 50%;
-            top: 2px;
-            left: 2px;
-            transition: transform 0.15s;
-        }
-
-        .effect-toggle.active::after {
-            transform: translateX(14px);
-        }
-
-        .effect-params {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-        }
-
-        .mini-param {
-            text-align: center;
-        }
-
-        .mini-param-value {
-            font-size: 11px;
-            color: var(--accent);
-            font-weight: 600;
-        }
-
-        .mini-param-label {
-            font-size: 9px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-        }
-
-        /* Effect Editor */
-        .effect-editor {
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .editor-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .editor-title {
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .preset-selector {
-            display: flex;
-            gap: 8px;
-        }
-
-        .preset-btn {
-            padding: 6px 14px;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            color: var(--text-secondary);
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        .preset-btn:hover {
-            background: var(--bg-hover);
-            color: var(--text-primary);
-        }
-
-        .preset-btn.active {
-            background: var(--accent);
-            color: #000;
-            border-color: var(--accent);
-        }
-
-        .param-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
-
-        .param-control {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 12px;
-        }
-
-        .param-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-
-        .param-name {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        .param-value {
-            font-size: 12px;
-            color: var(--accent);
-            font-family: 'SF Mono', monospace;
-        }
-
-        .param-slider {
-            width: 100%;
-            height: 6px;
-            -webkit-appearance: none;
-            background: var(--bg-secondary);
-            border-radius: 3px;
-            outline: none;
-        }
-
-        .param-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 14px;
-            height: 14px;
-            background: var(--accent);
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 0 10px rgba(0, 212, 168, 0.4);
-        }
-
         /* Empty State */
         .empty-state {
             position: absolute;
@@ -844,7 +638,215 @@
             color: var(--text-muted);
         }
 
-        /* Import Modal */
+        /* Effects Panel - Bottom, scrollable */
+        .effects-panel {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            height: 200px;
+            flex-shrink: 0;
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            overflow: hidden;
+        }
+
+        .effects-list {
+            border-right: 1px solid var(--border);
+            padding: 10px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .effect-slot {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .effect-slot:hover {
+            border-color: var(--accent);
+        }
+
+        .effect-slot.active {
+            border-color: var(--accent);
+            background: rgba(0, 212, 168, 0.1);
+        }
+
+        .effect-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .effect-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            background: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+        }
+
+        .effect-name {
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .effect-toggle {
+            margin-left: auto;
+            width: 28px;
+            height: 16px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .effect-toggle.active {
+            background: var(--accent);
+        }
+
+        .effect-toggle::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.15s;
+        }
+
+        .effect-toggle.active::after {
+            transform: translateX(12px);
+        }
+
+        .effect-params {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .mini-param {
+            text-align: center;
+        }
+
+        .mini-param-value {
+            font-size: 10px;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .mini-param-label {
+            font-size: 8px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        /* Effect Editor */
+        .effect-editor {
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .editor-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .preset-selector {
+            display: flex;
+            gap: 6px;
+        }
+
+        .preset-btn {
+            padding: 5px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .preset-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .preset-btn.active {
+            background: var(--accent);
+            color: #000;
+            border-color: var(--accent);
+        }
+
+        .param-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+            overflow-y: auto;
+        }
+
+        .param-control {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px;
+        }
+
+        .param-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .param-name {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .param-value {
+            font-size: 12px;
+            color: var(--accent);
+            font-family: 'SF Mono', monospace;
+        }
+
+        .param-slider {
+            width: 100%;
+            height: 5px;
+            -webkit-appearance: none;
+            background: var(--bg-secondary);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .param-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* Modals */
         .modal {
             position: fixed;
             top: 0;
@@ -866,27 +868,28 @@
         .modal-content {
             background: var(--bg-secondary);
             border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 40px;
+            border-radius: 12px;
+            padding: 30px;
             width: 90%;
-            max-width: 500px;
+            max-width: 450px;
             text-align: center;
         }
 
         .modal-title {
-            font-size: 24px;
+            font-size: 20px;
             margin-bottom: 10px;
         }
 
         .modal-subtitle {
             color: var(--text-secondary);
-            margin-bottom: 30px;
+            margin-bottom: 25px;
+            font-size: 14px;
         }
 
         .drop-zone {
             border: 2px dashed var(--border);
-            border-radius: 12px;
-            padding: 60px 40px;
+            border-radius: 10px;
+            padding: 40px;
             cursor: pointer;
             transition: all 0.2s;
             background: var(--bg-tertiary);
@@ -903,36 +906,35 @@
         }
 
         .drop-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
+            font-size: 40px;
+            margin-bottom: 10px;
         }
 
         .drop-text {
-            font-size: 16px;
-            margin-bottom: 8px;
+            font-size: 15px;
+            margin-bottom: 5px;
         }
 
         .drop-hint {
-            font-size: 13px;
+            font-size: 12px;
             color: var(--text-muted);
         }
 
         .modal-actions {
-            margin-top: 25px;
+            margin-top: 20px;
             display: flex;
             gap: 10px;
             justify-content: center;
         }
 
         .btn {
-            padding: 10px 24px;
-            border-radius: 8px;
+            padding: 10px 20px;
+            border-radius: 6px;
             border: 1px solid var(--border);
             background: var(--bg-tertiary);
             color: var(--text-primary);
             cursor: pointer;
             font-size: 14px;
-            transition: all 0.15s;
         }
 
         .btn:hover {
@@ -946,18 +948,14 @@
             font-weight: 600;
         }
 
-        .btn.primary:hover {
-            background: var(--accent-hover);
-        }
-
         /* Context Menu */
         .context-menu {
             position: absolute;
             background: var(--bg-secondary);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 6px;
-            min-width: 180px;
+            border-radius: 6px;
+            padding: 5px;
+            min-width: 160px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.4);
             z-index: 1000;
             display: none;
@@ -984,7 +982,7 @@
         .menu-divider {
             height: 1px;
             background: var(--border);
-            margin: 6px 0;
+            margin: 5px 0;
         }
 
         /* Scrollbars */
@@ -1006,19 +1004,53 @@
             background: var(--accent);
         }
 
-        /* Animations */
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* Audio Start Overlay */
+        .start-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            flex-direction: column;
+            gap: 20px;
         }
 
-        .track {
-            animation: slideIn 0.2s ease-out;
+        .start-overlay.hidden {
+            display: none;
+        }
+
+        .start-btn {
+            padding: 20px 40px;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0, 212, 168, 0.3);
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            background: var(--accent-hover);
         }
     </style>
-<base target="_blank">
 </head>
 <body>
+    <!-- Audio Context Start Overlay -->
+    <div class="start-overlay" id="startOverlay">
+        <div style="font-size: 48px;">🎵</div>
+        <h2 style="font-size: 24px;">Click to Start Audio Engine</h2>
+        <p style="color: var(--text-secondary);">Browser requires user interaction to play audio</p>
+        <button class="start-btn" onclick="initAudioEngine()">▶ Start Studio</button>
+    </div>
+
     <!-- Header -->
     <header class="header">
         <div class="brand">
@@ -1049,14 +1081,14 @@
 
     <!-- Main -->
     <div class="main">
-        <!-- Toolbar -->
+        <!-- Toolbar - Now horizontally scrollable -->
         <div class="toolbar">
             <div class="tool-group">
                 <button class="tool active" id="tool-select" onclick="setTool('select')">
-                    👆 Select Tool
+                    👆 Select
                 </button>
                 <button class="tool" id="tool-move" onclick="setTool('move')">
-                    ✋ Time Shift
+                    ✋ Move
                 </button>
                 <button class="tool" id="tool-cut" onclick="setTool('cut')">
                     ✂️ Split
@@ -1064,22 +1096,41 @@
                 <button class="tool" id="tool-trim" onclick="setTool('trim')">
                     📐 Trim
                 </button>
+                <button class="tool" id="tool-draw" onclick="setTool('draw')">
+                    ✏️ Draw
+                </button>
+                <button class="tool" id="tool-multi" onclick="setTool('multi')">
+                    🎯 Multi-Tool
+                </button>
             </div>
 
             <div class="tool-group">
-                <button class="tool" onclick="zoomIn()">🔍+</button>
-                <button class="tool" onclick="zoomOut()">🔍-</button>
-                <button class="tool" onclick="fitSelection()">↔️ Fit</button>
+                <button class="tool" onclick="zoomIn()">🔍 Zoom In</button>
+                <button class="tool" onclick="zoomOut()">🔍 Zoom Out</button>
+                <button class="tool" onclick="fitSelection()">↔️ Fit Selection</button>
+                <button class="tool" onclick="fitProject()">⬌ Fit All</button>
             </div>
 
             <div class="tool-group">
                 <button class="tool" onclick="undo()">↩️ Undo</button>
                 <button class="tool" onclick="redo()">↪️ Redo</button>
+                <button class="tool" onclick="cut()">✂️ Cut</button>
+                <button class="tool" onclick="copy()">📋 Copy</button>
+                <button class="tool" onclick="paste()">📄 Paste</button>
+                <button class="tool" onclick="deleteSelection()">🗑️ Delete</button>
+            </div>
+
+            <div class="tool-group">
+                <button class="tool" onclick="silence()">🔇 Silence</button>
+                <button class="tool" onclick="normalize()">📊 Normalize</button>
+                <button class="tool" onclick="fadeIn()">📈 Fade In</button>
+                <button class="tool" onclick="fadeOut()">📉 Fade Out</button>
             </div>
 
             <div class="zoom-controls">
                 <span style="font-size: 12px; color: var(--text-secondary);">Zoom:</span>
                 <input type="range" class="zoom-slider" min="10" max="500" value="100" oninput="setZoom(this.value)">
+                <span id="zoomPercent" style="font-size: 12px; color: var(--text-muted); min-width: 40px;">100%</span>
             </div>
         </div>
 
@@ -1103,12 +1154,11 @@
                     <div class="playhead" id="playhead" style="left: 0px;">
                         <div class="playhead-time" id="playheadTime">00:00:00</div>
                     </div>
-                    <div class="selection" id="selection" style="display: none;"></div>
                     
                     <div class="empty-state" id="emptyState">
                         <div class="empty-icon">🎵</div>
                         <div class="empty-text">No audio loaded</div>
-                        <div class="empty-subtext">Import audio to get started</div>
+                        <div class="empty-subtext">Click Import to add audio files</div>
                     </div>
                 </div>
             </div>
@@ -1117,15 +1167,11 @@
         <!-- Effects Panel -->
         <div class="effects-panel">
             <div class="effects-list">
-                <div class="panel-header">
-                    <span class="panel-title">Effects Chain</span>
-                </div>
-                
                 <div class="effect-slot active" onclick="selectEffect('eq')">
                     <div class="effect-header">
                         <div class="effect-icon">📊</div>
-                        <div class="effect-name">Parametric EQ</div>
-                        <div class="effect-toggle active"></div>
+                        <div class="effect-name">EQ</div>
+                        <div class="effect-toggle active" onclick="toggleEffect(event, this)"></div>
                     </div>
                     <div class="effect-params">
                         <div class="mini-param">
@@ -1147,12 +1193,12 @@
                     <div class="effect-header">
                         <div class="effect-icon">🎚️</div>
                         <div class="effect-name">Compressor</div>
-                        <div class="effect-toggle active"></div>
+                        <div class="effect-toggle active" onclick="toggleEffect(event, this)"></div>
                     </div>
                     <div class="effect-params">
                         <div class="mini-param">
                             <div class="mini-param-value">-18dB</div>
-                            <div class="mini-param-label">Threshold</div>
+                            <div class="mini-param-label">Thresh</div>
                         </div>
                         <div class="mini-param">
                             <div class="mini-param-value">4:1</div>
@@ -1169,7 +1215,7 @@
                     <div class="effect-header">
                         <div class="effect-icon">✨</div>
                         <div class="effect-name">De-esser</div>
-                        <div class="effect-toggle"></div>
+                        <div class="effect-toggle" onclick="toggleEffect(event, this)"></div>
                     </div>
                 </div>
 
@@ -1177,7 +1223,7 @@
                     <div class="effect-header">
                         <div class="effect-icon">🛑</div>
                         <div class="effect-name">Limiter</div>
-                        <div class="effect-toggle active"></div>
+                        <div class="effect-toggle active" onclick="toggleEffect(event, this)"></div>
                     </div>
                     <div class="effect-params">
                         <div class="mini-param">
@@ -1190,6 +1236,22 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="effect-slot" onclick="selectEffect('reverb')">
+                    <div class="effect-header">
+                        <div class="effect-icon">🌊</div>
+                        <div class="effect-name">Reverb</div>
+                        <div class="effect-toggle" onclick="toggleEffect(event, this)"></div>
+                    </div>
+                </div>
+
+                <div class="effect-slot" onclick="selectEffect('delay')">
+                    <div class="effect-header">
+                        <div class="effect-icon">⏱️</div>
+                        <div class="effect-name">Delay</div>
+                        <div class="effect-toggle" onclick="toggleEffect(event, this)"></div>
+                    </div>
+                </div>
             </div>
 
             <div class="effect-editor" id="effectEditor">
@@ -1200,13 +1262,14 @@
                         <button class="preset-btn" onclick="applyPreset('vocal')">Vocal</button>
                         <button class="preset-btn" onclick="applyPreset('radio')">Radio</button>
                         <button class="preset-btn" onclick="applyPreset('warm')">Warm</button>
+                        <button class="preset-btn" onclick="applyPreset('bright')">Bright</button>
                     </div>
                 </div>
 
                 <div class="param-grid" id="paramGrid">
                     <div class="param-control">
                         <div class="param-header">
-                            <span class="param-name">Low Cut Filter</span>
+                            <span class="param-name">Low Cut</span>
                             <span class="param-value" id="eq-low-val">80 Hz</span>
                         </div>
                         <input type="range" class="param-slider" min="20" max="200" value="80" 
@@ -1224,20 +1287,38 @@
 
                     <div class="param-control">
                         <div class="param-header">
-                            <span class="param-name">Low Mid</span>
-                            <span class="param-value" id="eq-lowmid-val">250 Hz +2 dB</span>
+                            <span class="param-name">Low Mid Freq</span>
+                            <span class="param-value" id="eq-lowmid-freq-val">250 Hz</span>
                         </div>
-                        <input type="range" class="param-slider" min="-12" max="12" value="2" 
-                               oninput="updateParam('eq-lowmid', this.value, 'dB')">
+                        <input type="range" class="param-slider" min="100" max="1000" value="250" 
+                               oninput="updateParam('eq-lowmid-freq', this.value, 'Hz')">
                     </div>
 
                     <div class="param-control">
                         <div class="param-header">
-                            <span class="param-name">Presence</span>
-                            <span class="param-value" id="eq-presence-val">5 kHz +4 dB</span>
+                            <span class="param-name">Low Mid Gain</span>
+                            <span class="param-value" id="eq-lowmid-gain-val">+2 dB</span>
+                        </div>
+                        <input type="range" class="param-slider" min="-12" max="12" value="2" 
+                               oninput="updateParam('eq-lowmid-gain', this.value, 'dB')">
+                    </div>
+
+                    <div class="param-control">
+                        <div class="param-header">
+                            <span class="param-name">Presence Freq</span>
+                            <span class="param-value" id="eq-presence-freq-val">5 kHz</span>
+                        </div>
+                        <input type="range" class="param-slider" min="2000" max="8000" value="5000" 
+                               oninput="updateParam('eq-presence-freq', this.value, 'kHz')">
+                    </div>
+
+                    <div class="param-control">
+                        <div class="param-header">
+                            <span class="param-name">Presence Gain</span>
+                            <span class="param-value" id="eq-presence-gain-val">+4 dB</span>
                         </div>
                         <input type="range" class="param-slider" min="-12" max="12" value="4" 
-                               oninput="updateParam('eq-presence', this.value, 'dB')">
+                               oninput="updateParam('eq-presence-gain', this.value, 'dB')">
                     </div>
 
                     <div class="param-control">
@@ -1251,7 +1332,7 @@
 
                     <div class="param-control">
                         <div class="param-header">
-                            <span class="param-name">Q Factor</span>
+                            <span class="param-name">Q Factor (Width)</span>
                             <span class="param-value" id="eq-q-val">1.2</span>
                         </div>
                         <input type="range" class="param-slider" min="0.5" max="10" step="0.1" value="1.2" 
@@ -1271,7 +1352,7 @@
             <div class="drop-zone" id="dropZone">
                 <div class="drop-icon">📁</div>
                 <div class="drop-text">Drop audio files here</div>
-                <div class="drop-hint">Supports WAV, MP3, FLAC, M4A</div>
+                <div class="drop-hint">Supports WAV, MP3, FLAC, M4A, OGG</div>
                 <input type="file" id="fileInput" accept="audio/*" multiple style="display: none;">
             </div>
 
@@ -1299,46 +1380,44 @@
     <script>
         // State
         let audioContext = null;
+        let masterGain = null;
         let isPlaying = false;
         let isRecording = false;
         let currentTime = 0;
         let zoom = 100;
         let tracks = [];
         let clips = [];
+        let sources = []; // Active audio sources
         let selectedTrack = null;
         let selectedClip = null;
-        let selectionStart = null;
-        let selectionEnd = null;
-        let undoStack = [];
-        let redoStack = [];
+        let animationFrame = null;
 
-        // Initialize
-        function init() {
-            // Check for Web Audio API support
-            if (!window.AudioContext && !window.webkitAudioContext) {
-                alert('Web Audio API not supported in this browser');
-                return;
-            }
+        // Initialize Audio Engine (called by user interaction)
+        function initAudioEngine() {
+            document.getElementById('startOverlay').classList.add('hidden');
             
-            // Add keyboard shortcuts
-            document.addEventListener('keydown', handleKeyDown);
+            // Create audio context
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
             
-            // Setup drag and drop
-            setupDragDrop();
+            // Create master gain
+            masterGain = audioContext.createGain();
+            masterGain.gain.value = 0.8;
+            masterGain.connect(audioContext.destination);
             
-            // Setup context menu
-            setupContextMenu();
-        }
-
-        function initAudio() {
-            if (!audioContext) {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            }
+            console.log('Audio engine started. Sample rate:', audioContext.sampleRate);
         }
 
         // Transport Controls
         function togglePlay() {
-            initAudio();
+            if (!audioContext) {
+                alert('Please click "Start Studio" first to enable audio');
+                return;
+            }
+            
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            
             const btn = document.getElementById('playBtn');
             
             if (isPlaying) {
@@ -1351,22 +1430,63 @@
         function play() {
             isPlaying = true;
             document.getElementById('playBtn').textContent = '⏸';
+            
+            // Play all clips from current position
+            sources = []; // Clear old sources
+            
+            clips.forEach(clip => {
+                if (clip.buffer && !clip.track.muted) {
+                    playClip(clip, currentTime);
+                }
+            });
+            
             animate();
+        }
+
+        function playClip(clip, fromTime) {
+            const source = audioContext.createBufferSource();
+            source.buffer = clip.buffer;
+            
+            // Create gain node for this clip
+            const gainNode = audioContext.createGain();
+            gainNode.gain.value = clip.track ? (clip.track.volume / 100) : 0.8;
+            
+            // Connect: source -> gain -> master -> destination
+            source.connect(gainNode);
+            gainNode.connect(masterGain);
+            
+            // Calculate offset
+            const offset = Math.max(0, fromTime - clip.start);
+            const duration = clip.buffer.duration - offset;
+            
+            if (duration > 0) {
+                source.start(0, offset, duration);
+                sources.push({ source, gainNode, clip });
+            }
         }
 
         function pause() {
             isPlaying = false;
             document.getElementById('playBtn').textContent = '▶';
+            
+            // Stop all sources
+            sources.forEach(({ source }) => {
+                try {
+                    source.stop();
+                } catch(e) {}
+            });
+            sources = [];
+            
+            cancelAnimationFrame(animationFrame);
         }
 
         function animate() {
             if (!isPlaying) return;
             
-            currentTime += 0.016;
+            currentTime += 0.016; // ~60fps
             updatePlayhead();
-            updateMeters();
             
-            requestAnimationFrame(animate);
+            animationFrame = requestAnimationFrame(animate);
         }
 
         function updatePlayhead() {
@@ -1379,30 +1499,30 @@
             const secs = Math.floor(currentTime % 60);
             const ms = Math.floor((currentTime % 1) * 1000);
             
-            document.getElementById('timeDisplay').textContent = 
-                `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`;
+            const timeStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`;
+            document.getElementById('timeDisplay').textContent = timeStr;
+            document.getElementById('playheadTime').textContent = timeStr.substring(0, 8);
             
-            document.getElementById('playheadTime').textContent = 
-                `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}:${ms.toString().padStart(2, '0')}`;
-        }
-
-        function updateMeters() {
-            // Simulate meter movement
-            tracks.forEach(track => {
-                if (!track.muted && isPlaying) {
-                    const level = Math.random() * 80;
-                    // Update visual meters if they exist
-                }
-            });
+            // Auto-scroll if playhead goes off screen
+            const container = document.querySelector('.timeline-tracks');
+            const containerWidth = container.clientWidth;
+            const scrollPos = container.scrollLeft;
+            
+            if (pixels > scrollPos + containerWidth - 100) {
+                container.scrollLeft = pixels - 100;
+            }
         }
 
         function goToStart() {
             currentTime = 0;
             updatePlayhead();
+            if (isPlaying) {
+                pause();
+                play();
+            }
         }
 
         function goToEnd() {
-            // Find end of last clip
             let end = 0;
             clips.forEach(clip => {
                 end = Math.max(end, clip.start + clip.duration);
@@ -1414,11 +1534,19 @@
         function skipBackward() {
             currentTime = Math.max(0, currentTime - 5);
             updatePlayhead();
+            if (isPlaying) {
+                pause();
+                play();
+            }
         }
 
         function skipForward() {
             currentTime += 5;
             updatePlayhead();
+            if (isPlaying) {
+                pause();
+                play();
+            }
         }
 
         function toggleLoop() {
@@ -1430,9 +1558,9 @@
             isRecording = !isRecording;
             btn.classList.toggle('active');
             
-            if (isRecording) {
-                initAudio();
-                // Start recording logic
+            if (isRecording && audioContext) {
+                // Start recording logic here
+                console.log('Recording started');
             }
         }
 
@@ -1458,34 +1586,61 @@
         }
 
         function updateZoom() {
-            // Redraw waveforms at new zoom level
+            // Update zoom percentage display
+            document.getElementById('zoomPercent').textContent = zoom + '%';
+            
+            // Redraw clips at new zoom
             clips.forEach(clip => {
                 if (clip.element) {
                     clip.element.style.width = `${clip.duration * (zoom / 10)}px`;
+                    clip.element.style.left = `${clip.start * (zoom / 10)}px`;
+                    
+                    // Redraw waveform canvas
+                    const canvas = clip.element.querySelector('canvas');
+                    if (canvas) {
+                        canvas.width = clip.duration * (zoom / 10);
+                        drawWaveform(canvas, clip.buffer, clip.type);
+                    }
                 }
             });
+            
             updatePlayhead();
+            drawGrid();
         }
 
         function fitSelection() {
-            if (selectionStart !== null && selectionEnd !== null) {
-                const duration = selectionEnd - selectionStart;
+            if (selectedClip) {
+                const duration = selectedClip.duration;
                 const containerWidth = document.querySelector('.timeline-tracks').clientWidth;
-                zoom = (containerWidth / duration) * 10;
-                currentTime = selectionStart;
+                zoom = Math.max(10, (containerWidth / duration) * 8);
+                currentTime = selectedClip.start;
                 updateZoom();
                 updatePlayhead();
+            }
+        }
+
+        function fitProject() {
+            let maxEnd = 0;
+            clips.forEach(clip => {
+                maxEnd = Math.max(maxEnd, clip.start + clip.duration);
+            });
+            
+            if (maxEnd > 0) {
+                const containerWidth = document.querySelector('.timeline-tracks').clientWidth;
+                zoom = Math.max(10, (containerWidth / maxEnd) * 9);
+                updateZoom();
             }
         }
 
         // Tracks
         function addTrack(type = 'vocal') {
             const trackId = `track-${tracks.length}`;
+            const trackNum = tracks.filter(t => t.type === type).length + 1;
             const track = {
                 id: trackId,
                 type: type,
-                name: type === 'vocal' ? `Vocal ${tracks.filter(t => t.type === 'vocal').length + 1}` : 
-                      type === 'beat' ? `Beat ${tracks.filter(t => t.type === 'beat').length + 1}` : 
+                name: type === 'vocal' ? `Vocal ${trackNum}` : 
+                      type === 'beat' ? `Beat ${trackNum}` : 
                       `Track ${tracks.length + 1}`,
                 muted: false,
                 solo: false,
@@ -1498,8 +1653,10 @@
             renderTrack(track);
             createTimelineLane(track);
             
-            // Hide empty state
             document.getElementById('emptyState').style.display = 'none';
+            
+            // Auto-select new track
+            selectTrack(trackId);
         }
 
         function renderTrack(track) {
@@ -1536,39 +1693,48 @@
             const lane = document.createElement('div');
             lane.className = 'timeline-track';
             lane.id = `lane-${track.id}`;
-            lane.innerHTML = `
-                <div class="track-lane" id="lane-content-${track.id}"></div>
-            `;
+            lane.innerHTML = `<div class="track-lane" id="lane-content-${track.id}"></div>`;
             container.appendChild(lane);
         }
 
         function selectTrack(trackId) {
             document.querySelectorAll('.track').forEach(t => t.classList.remove('selected'));
-            document.getElementById(trackId).classList.add('selected');
-            selectedTrack = trackId;
+            const trackEl = document.getElementById(trackId);
+            if (trackEl) {
+                trackEl.classList.add('selected');
+                selectedTrack = tracks.find(t => t.id === trackId);
+            }
         }
 
         function toggleMute(trackId) {
             const track = tracks.find(t => t.id === trackId);
-            track.muted = !track.muted;
-            event.target.classList.toggle('active');
+            if (track) {
+                track.muted = !track.muted;
+                event.target.classList.toggle('active');
+            }
         }
 
         function toggleSolo(trackId) {
             const track = tracks.find(t => t.id === trackId);
-            track.solo = !track.solo;
-            event.target.classList.toggle('active');
+            if (track) {
+                track.solo = !track.solo;
+                event.target.classList.toggle('active');
+            }
         }
 
         function toggleArm(trackId) {
             const track = tracks.find(t => t.id === trackId);
-            track.armed = !track.armed;
-            event.target.classList.toggle('active');
+            if (track) {
+                track.armed = !track.armed;
+                event.target.classList.toggle('active');
+            }
         }
 
         function setVolume(trackId, value) {
             const track = tracks.find(t => t.id === trackId);
-            track.volume = parseInt(value);
+            if (track) {
+                track.volume = parseInt(value);
+            }
         }
 
         // File Import
@@ -1580,34 +1746,37 @@
             document.getElementById('importModal').classList.remove('active');
         }
 
-        function setupDragDrop() {
-            const dropZone = document.getElementById('dropZone');
-            const fileInput = document.getElementById('fileInput');
-            
-            dropZone.addEventListener('click', () => fileInput.click());
-            
-            dropZone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dropZone.classList.add('dragover');
-            });
-            
-            dropZone.addEventListener('dragleave', () => {
-                dropZone.classList.remove('dragover');
-            });
-            
-            dropZone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dropZone.classList.remove('dragover');
-                handleFiles(e.dataTransfer.files);
-            });
-            
-            fileInput.addEventListener('change', (e) => {
-                handleFiles(e.target.files);
-            });
-        }
+        // Setup drag and drop
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
 
         async function handleFiles(files) {
-            initAudio();
+            if (!audioContext) {
+                alert('Please click "Start Studio" first to enable audio');
+                return;
+            }
+            
             closeModal();
             
             for (let file of files) {
@@ -1616,37 +1785,56 @@
         }
 
         async function loadAudioFile(file) {
-            const arrayBuffer = await file.arrayBuffer();
-            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-            
-            // Determine type from filename
-            const type = file.name.toLowerCase().includes('beat') || 
-                        file.name.toLowerCase().includes('instr') ? 'beat' : 'vocal';
-            
-            // Create track if needed
-            if (tracks.length === 0) {
-                addTrack(type);
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                
+                // Determine type from filename
+                const name = file.name.toLowerCase();
+                const type = name.includes('beat') || name.includes('instr') || name.includes('drum') ? 'beat' : 'vocal';
+                
+                // Create track if none exist
+                if (tracks.length === 0) {
+                    addTrack(type);
+                }
+                
+                // Use selected track or create new one if different type
+                let targetTrack = selectedTrack;
+                if (!targetTrack || targetTrack.type !== type) {
+                    // Check if any track of this type exists
+                    const existingTrack = tracks.find(t => t.type === type);
+                    if (existingTrack) {
+                        targetTrack = existingTrack;
+                    } else {
+                        addTrack(type);
+                        targetTrack = tracks[tracks.length - 1];
+                    }
+                }
+                
+                const clip = {
+                    id: `clip-${clips.length}`,
+                    track: targetTrack,
+                    buffer: audioBuffer,
+                    start: 0,
+                    duration: audioBuffer.duration,
+                    offset: 0,
+                    name: file.name.replace(/\.[^/.]+$/, ""),
+                    type: type
+                };
+                
+                clips.push(clip);
+                renderClip(clip);
+                
+                console.log(`Loaded: ${file.name} (${audioBuffer.duration.toFixed(2)}s)`);
+                
+            } catch (error) {
+                console.error('Error loading audio:', error);
+                alert('Error loading audio file. Please try a different format (WAV, MP3, FLAC).');
             }
-            
-            const trackId = selectedTrack || tracks[tracks.length - 1].id;
-            
-            const clip = {
-                id: `clip-${clips.length}`,
-                track: trackId,
-                buffer: audioBuffer,
-                start: 0,
-                duration: audioBuffer.duration,
-                offset: 0,
-                name: file.name,
-                type: type
-            };
-            
-            clips.push(clip);
-            renderClip(clip);
         }
 
         function renderClip(clip) {
-            const lane = document.getElementById(`lane-content-${clip.track}`);
+            const lane = document.getElementById(`lane-content-${clip.track.id}`);
             if (!lane) return;
             
             const div = document.createElement('div');
@@ -1655,28 +1843,22 @@
             div.style.left = '0px';
             div.style.width = `${clip.duration * (zoom / 10)}px`;
             
-            // Create waveform canvas
             const canvas = document.createElement('canvas');
             canvas.className = 'clip-waveform';
-            canvas.width = clip.duration * (zoom / 10);
+            canvas.width = Math.max(50, clip.duration * (zoom / 10));
             canvas.height = 100;
             
             drawWaveform(canvas, clip.buffer, clip.type);
             
             div.innerHTML = `
                 <div class="clip-content">
-                    <canvas class="clip-waveform" id="waveform-${clip.id}"></canvas>
                     <div class="clip-info">${clip.name}</div>
                     <div class="clip-handle left"></div>
                     <div class="clip-handle right"></div>
                 </div>
             `;
             
-            // Replace canvas in DOM
-            setTimeout(() => {
-                const wf = div.querySelector('.clip-waveform');
-                wf.replaceWith(canvas);
-            }, 0);
+            div.querySelector('.clip-content').insertBefore(canvas, div.querySelector('.clip-info'));
             
             // Event listeners
             div.addEventListener('mousedown', (e) => startDrag(e, clip));
@@ -1684,6 +1866,11 @@
             
             lane.appendChild(div);
             clip.element = div;
+            
+            // Draw grid if first clip
+            if (clips.length === 1) {
+                drawGrid();
+            }
         }
 
         function drawWaveform(canvas, buffer, type) {
@@ -1696,16 +1883,16 @@
             
             ctx.clearRect(0, 0, width, height);
             
-            // Draw center line
+            // Center line
             ctx.strokeStyle = 'rgba(255,255,255,0.1)';
             ctx.beginPath();
             ctx.moveTo(0, amp);
             ctx.lineTo(width, amp);
             ctx.stroke();
             
-            // Draw waveform
-            ctx.fillStyle = type === 'vocal' ? 'rgba(255,255,255,0.8)' : 
-                           type === 'beat' ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.7)';
+            // Waveform color based on type
+            ctx.fillStyle = type === 'vocal' ? 'rgba(255,255,255,0.9)' : 
+                           type === 'beat' ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.8)';
             
             for (let i = 0; i < width; i++) {
                 let min = 1.0;
@@ -1723,6 +1910,50 @@
             }
         }
 
+        function drawGrid() {
+            const ruler = document.getElementById('timelineRuler');
+            const lanes = document.querySelectorAll('.track-lane');
+            
+            // Clear existing grid
+            document.querySelectorAll('.grid-line').forEach(el => el.remove());
+            
+            let maxDuration = 60; // Default 1 minute
+            
+            clips.forEach(clip => {
+                maxDuration = Math.max(maxDuration, clip.start + clip.duration + 30);
+            });
+            
+            // Draw ruler markers
+            const pixelsPerSecond = zoom / 10;
+            const interval = 5; // Mark every 5 seconds
+            
+            for (let i = 0; i <= maxDuration; i += interval) {
+                const left = i * pixelsPerSecond;
+                
+                // Ruler marker
+                const marker = document.createElement('div');
+                marker.style.position = 'absolute';
+                marker.style.left = `${left}px`;
+                marker.style.top = '5px';
+                marker.style.fontSize = '10px';
+                marker.style.color = 'var(--text-muted)';
+                marker.style.transform = 'translateX(-50%)';
+                
+                const mins = Math.floor(i / 60);
+                const secs = i % 60;
+                marker.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+                ruler.appendChild(marker);
+                
+                // Grid lines in lanes
+                lanes.forEach(lane => {
+                    const line = document.createElement('div');
+                    line.className = i % 10 === 0 ? 'grid-line major' : 'grid-line';
+                    line.style.left = `${left}px`;
+                    lane.appendChild(line);
+                });
+            }
+        }
+
         // Clip Dragging
         function startDrag(e, clip) {
             if (e.target.classList.contains('clip-handle')) {
@@ -1730,22 +1961,27 @@
                 return;
             }
             
+            if (e.button !== 0) return; // Only left click
+            
             selectedClip = clip;
             document.querySelectorAll('.audio-clip').forEach(c => c.classList.remove('selected'));
             clip.element.classList.add('selected');
             
             const startX = e.clientX;
-            const startLeft = parseInt(clip.element.style.left) || 0;
+            const startLeft = parseFloat(clip.element.style.left) || 0;
+            const pixelsPerSecond = zoom / 10;
             
             function onMouseMove(e) {
-                const delta = e.clientX - startX;
-                const newLeft = startLeft + delta;
-                const timePos = newLeft / (zoom / 10);
+                const deltaX = e.clientX - startX;
+                const newLeft = startLeft + deltaX;
+                const timePos = newLeft / pixelsPerSecond;
                 
-                // Snap to grid (0.1 second increments)
+                // Snap to 0.1 second grid
                 const snappedTime = Math.round(timePos * 10) / 10;
-                clip.start = snappedTime;
-                clip.element.style.left = `${snappedTime * (zoom / 10)}px`;
+                const snappedLeft = snappedTime * pixelsPerSecond;
+                
+                clip.start = Math.max(0, snappedTime);
+                clip.element.style.left = `${snappedLeft}px`;
             }
             
             function onMouseUp() {
@@ -1759,95 +1995,98 @@
 
         function startResize(e, clip, isLeft) {
             e.stopPropagation();
-            // Implement resize logic
+            // Resize logic would go here
         }
 
         // Context Menu
-        function setupContextMenu() {
-            const menu = document.getElementById('contextMenu');
-            
-            document.addEventListener('click', () => {
-                menu.classList.remove('active');
-            });
-        }
+        const contextMenu = document.getElementById('contextMenu');
+        
+        document.addEventListener('click', () => {
+            contextMenu.classList.remove('active');
+        });
 
         function showContextMenu(e, clip) {
             e.preventDefault();
-            const menu = document.getElementById('contextMenu');
-            menu.style.left = `${e.pageX}px`;
-            menu.style.top = `${e.pageY}px`;
-            menu.classList.add('active');
             selectedClip = clip;
+            contextMenu.style.left = `${e.pageX}px`;
+            contextMenu.style.top = `${e.pageY}px`;
+            contextMenu.classList.add('active');
         }
 
         // Editing Functions
         function cutSelection() {
-            saveState();
-            // Implement cut
+            if (selectedClip) {
+                copySelection();
+                deleteSelection();
+            }
+            contextMenu.classList.remove('active');
         }
 
         function copySelection() {
-            // Implement copy
+            // Implement copy to clipboard
+            contextMenu.classList.remove('active');
         }
 
         function paste() {
-            saveState();
             // Implement paste
+            contextMenu.classList.remove('active');
         }
 
         function deleteSelection() {
-            saveState();
             if (selectedClip) {
                 selectedClip.element.remove();
                 clips = clips.filter(c => c !== selectedClip);
+                
+                // Stop if playing this clip
+                if (isPlaying) {
+                    pause();
+                    play();
+                }
+                
                 selectedClip = null;
             }
+            contextMenu.classList.remove('active');
         }
 
         function silenceSelection() {
-            saveState();
-            // Implement silence
+            contextMenu.classList.remove('active');
         }
 
         function normalize() {
-            saveState();
-            // Implement normalize
+            contextMenu.classList.remove('active');
         }
 
         function fadeIn() {
-            saveState();
-            // Implement fade in
+            contextMenu.classList.remove('active');
         }
 
         function fadeOut() {
-            saveState();
-            // Implement fade out
+            contextMenu.classList.remove('active');
         }
 
         // Undo/Redo
-        function saveState() {
-            undoStack.push(JSON.stringify({tracks, clips, currentTime}));
-            redoStack = [];
-        }
-
         function undo() {
-            if (undoStack.length > 0) {
-                redoStack.push(JSON.stringify({tracks, clips, currentTime}));
-                const state = JSON.parse(undoStack.pop());
-                restoreState(state);
-            }
+            console.log('Undo');
         }
 
         function redo() {
-            if (redoStack.length > 0) {
-                undoStack.push(JSON.stringify({tracks, clips, currentTime}));
-                const state = JSON.parse(redoStack.pop());
-                restoreState(state);
-            }
+            console.log('Redo');
         }
 
-        function restoreState(state) {
-            // Implement state restoration
+        function cut() {
+            cutSelection();
+        }
+
+        function copy() {
+            copySelection();
+        }
+
+        function paste() {
+            paste();
+        }
+
+        function silence() {
+            silenceSelection();
         }
 
         // Effects
@@ -1855,24 +2094,28 @@
             document.querySelectorAll('.effect-slot').forEach(s => s.classList.remove('active'));
             event.currentTarget.classList.add('active');
             
-            // Update editor panel based on effect
-            updateEffectEditor(effect);
-        }
-
-        function updateEffectEditor(effect) {
-            const editor = document.getElementById('effectEditor');
             const titles = {
                 'eq': 'Parametric EQ',
                 'compressor': 'Compressor',
                 'deesser': 'De-esser',
-                'limiter': 'Limiter'
+                'limiter': 'Limiter',
+                'reverb': 'Reverb',
+                'delay': 'Delay'
             };
             
-            editor.querySelector('.editor-title').textContent = titles[effect] || effect;
+            document.querySelector('.editor-title').textContent = titles[effect] || effect;
+        }
+
+        function toggleEffect(e, toggle) {
+            e.stopPropagation();
+            toggle.classList.toggle('active');
         }
 
         function updateParam(id, value, unit) {
-            document.getElementById(`${id}-val`).textContent = `${value} ${unit}`;
+            const el = document.getElementById(`${id}-val`);
+            if (el) {
+                el.textContent = `${value} ${unit}`;
+            }
         }
 
         function applyPreset(preset) {
@@ -1883,27 +2126,27 @@
                 'flat': { low: 80, lowshelf: 0, lowmid: 0, presence: 0, air: 0 },
                 'vocal': { low: 80, lowshelf: 0, lowmid: 2, presence: 4, air: 3 },
                 'radio': { low: 100, lowshelf: -2, lowmid: 3, presence: 6, air: 4 },
-                'warm': { low: 60, lowshelf: 2, lowmid: 4, presence: 2, air: 1 }
+                'warm': { low: 60, lowshelf: 2, lowmid: 4, presence: 2, air: 1 },
+                'bright': { low: 100, lowshelf: -3, lowmid: -1, presence: 8, air: 6 }
             };
             
             const p = presets[preset];
             if (p) {
                 updateParam('eq-low', p.low, 'Hz');
                 updateParam('eq-lowshelf', p.lowshelf, 'dB');
-                updateParam('eq-lowmid', `250 Hz ${p.lowmid > 0 ? '+' : ''}${p.lowmid}`, 'dB');
-                updateParam('eq-presence', `5 kHz ${p.presence > 0 ? '+' : ''}${p.presence}`, 'dB');
-                updateParam('eq-air', `12 kHz ${p.air > 0 ? '+' : ''}${p.air}`, 'dB');
+                updateParam('eq-lowmid-gain', p.lowmid, 'dB');
+                updateParam('eq-presence-gain', p.presence, 'dB');
+                updateParam('eq-air', p.air, 'dB');
             }
         }
 
         // Export
         function exportAudio() {
-            // Implement export logic
-            alert('Export feature: Would render all tracks to WAV/MP3');
+            alert('Export: Would render all tracks to a single WAV file');
         }
 
-        // Keyboard Shortcuts
-        function handleKeyDown(e) {
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
             if (e.target.tagName === 'INPUT') return;
             
             switch(e.key) {
@@ -1918,24 +2161,20 @@
                 case 'z':
                     if (e.ctrlKey || e.metaKey) {
                         e.preventDefault();
-                        if (e.shiftKey) redo();
-                        else undo();
+                        undo();
                     }
                     break;
-                case '1':
-                    setTool('select');
-                    break;
-                case '2':
-                    setTool('move');
-                    break;
-                case '3':
-                    setTool('cut');
+                case 'y':
+                    if (e.ctrlKey || e.metaKey) {
+                        e.preventDefault();
+                        redo();
+                    }
                     break;
             }
-        }
+        });
 
         // Initialize
-        init();
+        console.log('WaveCraft Pro loaded. Click "Start Studio" to begin.');
     </script>
 </body>
 </html>
