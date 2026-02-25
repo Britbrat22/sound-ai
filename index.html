@@ -1,0 +1,1941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WaveCraft Pro - Professional Audio Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0f0f13;
+            --bg-secondary: #1a1a20;
+            --bg-tertiary: #25252e;
+            --bg-hover: #2f2f3a;
+            --border: #3a3a47;
+            --accent: #00d4aa;
+            --accent-hover: #00ffc8;
+            --accent-secondary: #ff006e;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --text-muted: #606070;
+            --waveform-bg: #151519;
+            --waveform-center: #1e1e24;
+            --selection: rgba(0, 212, 168, 0.3);
+            --selection-border: #00d4aa;
+            --danger: #ff4444;
+            --warning: #ffaa00;
+            --success: #00ff88;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            font-size: 14px;
+        }
+
+        /* Header */
+        .header {
+            height: 60px;
+            background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 20px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 15px rgba(0, 212, 168, 0.3);
+        }
+
+        .brand-text h1 {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .brand-text span {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Transport */
+        .transport {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0,0,0,0.3);
+            padding: 6px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .tr-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+
+        .tr-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .tr-btn.primary {
+            background: var(--accent);
+            color: #000;
+            width: 44px;
+            height: 44px;
+            font-size: 20px;
+        }
+
+        .tr-btn.primary:hover {
+            background: var(--accent-hover);
+            transform: scale(1.05);
+        }
+
+        .tr-btn.record {
+            color: var(--danger);
+        }
+
+        .tr-btn.record:hover {
+            background: rgba(255, 68, 68, 0.2);
+        }
+
+        .tr-btn.record.active {
+            background: var(--danger);
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .time-display {
+            font-family: 'SF Mono', monospace;
+            font-size: 24px;
+            color: var(--accent);
+            background: rgba(0,0,0,0.4);
+            padding: 8px 20px;
+            border-radius: 8px;
+            min-width: 140px;
+            text-align: center;
+            letter-spacing: 2px;
+            border: 1px solid var(--border);
+        }
+
+        .tempo-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        .tempo-btn {
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .tempo-btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--accent);
+        }
+
+        /* Main Layout */
+        .main {
+            display: grid;
+            grid-template-rows: 45px 1fr 180px;
+            height: calc(100vh - 60px);
+        }
+
+        /* Toolbar */
+        .toolbar {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            gap: 5px;
+        }
+
+        .tool-group {
+            display: flex;
+            gap: 3px;
+            padding-right: 15px;
+            margin-right: 15px;
+            border-right: 1px solid var(--border);
+        }
+
+        .tool {
+            padding: 8px 14px;
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-secondary);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s;
+        }
+
+        .tool:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .tool.active {
+            background: rgba(0, 212, 168, 0.15);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .zoom-slider {
+            width: 100px;
+            height: 4px;
+            -webkit-appearance: none;
+            background: var(--bg-tertiary);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .zoom-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* Editor Area */
+        .editor {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            overflow: hidden;
+        }
+
+        /* Track Panel */
+        .track-panel {
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .add-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-tertiary);
+            color: var(--accent);
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .add-btn:hover {
+            background: var(--accent);
+            color: #000;
+        }
+
+        .tracks-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .track {
+            border-bottom: 1px solid var(--border);
+            transition: background 0.15s;
+        }
+
+        .track:hover {
+            background: var(--bg-hover);
+        }
+
+        .track.selected {
+            background: rgba(0, 212, 168, 0.08);
+            border-left: 3px solid var(--accent);
+        }
+
+        .track-header {
+            padding: 12px;
+        }
+
+        .track-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .track-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .track-color.vocal { background: var(--accent-secondary); }
+        .track-color.beat { background: var(--accent); }
+        .track-color.instr { background: #ffaa00; }
+
+        .track-name {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .track-type {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+
+        .track-controls {
+            display: flex;
+            gap: 6px;
+        }
+
+        .tc-btn {
+            flex: 1;
+            height: 28px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .tc-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .tc-btn.mute.active { background: var(--danger); color: white; border-color: var(--danger); }
+        .tc-btn.solo.active { background: var(--warning); color: #000; border-color: var(--warning); }
+        .tc-btn.arm.active { background: var(--accent-secondary); color: white; border-color: var(--accent-secondary); }
+
+        .track-fader {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .fader-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            width: 20px;
+        }
+
+        .fader {
+            flex: 1;
+            height: 4px;
+            -webkit-appearance: none;
+            background: var(--bg-tertiary);
+            border-radius: 2px;
+        }
+
+        .fader::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 10px;
+            height: 10px;
+            background: var(--text-primary);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* Timeline */
+        .timeline-container {
+            display: flex;
+            flex-direction: column;
+            background: var(--waveform-bg);
+            overflow: hidden;
+        }
+
+        .timeline-header {
+            height: 30px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .timeline-tracks {
+            flex: 1;
+            overflow: auto;
+            position: relative;
+        }
+
+        .timeline-track {
+            height: 120px;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+            background: var(--waveform-bg);
+        }
+
+        .timeline-track:nth-child(even) {
+            background: rgba(255,255,255,0.01);
+        }
+
+        .track-lane {
+            position: relative;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* Waveform Display */
+        .waveform-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        .waveform-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Audio Clip */
+        .audio-clip {
+            position: absolute;
+            height: 100px;
+            top: 10px;
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: grab;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .audio-clip:active {
+            cursor: grabbing;
+        }
+
+        .audio-clip.selected {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(0, 212, 168, 0.4);
+        }
+
+        .clip-vocal {
+            background: linear-gradient(180deg, rgba(255, 0, 110, 0.6), rgba(255, 0, 110, 0.3));
+        }
+
+        .clip-beat {
+            background: linear-gradient(180deg, rgba(0, 212, 168, 0.5), rgba(0, 212, 168, 0.2));
+        }
+
+        .clip-instr {
+            background: linear-gradient(180deg, rgba(255, 170, 0, 0.5), rgba(255, 170, 0, 0.2));
+        }
+
+        .clip-content {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .clip-waveform {
+            width: 100%;
+            height: 100%;
+            opacity: 0.9;
+        }
+
+        .clip-info {
+            position: absolute;
+            top: 4px;
+            left: 8px;
+            font-size: 11px;
+            background: rgba(0,0,0,0.7);
+            padding: 2px 8px;
+            border-radius: 4px;
+            pointer-events: none;
+        }
+
+        .clip-handle {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 6px;
+            cursor: col-resize;
+            background: rgba(255,255,255,0.2);
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+
+        .audio-clip:hover .clip-handle {
+            opacity: 1;
+        }
+
+        .clip-handle.left { left: 0; }
+        .clip-handle.right { right: 0; }
+
+        /* Selection */
+        .selection {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            background: var(--selection);
+            border-left: 2px solid var(--selection-border);
+            border-right: 2px solid var(--selection-border);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Playhead */
+        .playhead {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--accent);
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .playhead::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: -5px;
+            width: 12px;
+            height: 12px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .playhead-time {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent);
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* Grid Lines */
+        .grid-line {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: rgba(255,255,255,0.05);
+            pointer-events: none;
+        }
+
+        .grid-line.major {
+            background: rgba(255,255,255,0.15);
+            width: 2px;
+        }
+
+        .grid-label {
+            position: absolute;
+            top: 8px;
+            font-size: 10px;
+            color: var(--text-muted);
+            transform: translateX(-50%);
+        }
+
+        /* Effects Panel */
+        .effects-panel {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: 200px 1fr;
+        }
+
+        .effects-list {
+            border-right: 1px solid var(--border);
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .effect-slot {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .effect-slot:hover {
+            border-color: var(--accent);
+            background: var(--bg-hover);
+        }
+
+        .effect-slot.active {
+            border-color: var(--accent);
+            background: rgba(0, 212, 168, 0.1);
+        }
+
+        .effect-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .effect-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            background: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .effect-name {
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .effect-toggle {
+            margin-left: auto;
+            width: 32px;
+            height: 18px;
+            background: var(--bg-secondary);
+            border-radius: 9px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .effect-toggle.active {
+            background: var(--accent);
+        }
+
+        .effect-toggle::after {
+            content: '';
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.15s;
+        }
+
+        .effect-toggle.active::after {
+            transform: translateX(14px);
+        }
+
+        .effect-params {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .mini-param {
+            text-align: center;
+        }
+
+        .mini-param-value {
+            font-size: 11px;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .mini-param-label {
+            font-size: 9px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        /* Effect Editor */
+        .effect-editor {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .editor-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .preset-selector {
+            display: flex;
+            gap: 8px;
+        }
+
+        .preset-btn {
+            padding: 6px 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .preset-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .preset-btn.active {
+            background: var(--accent);
+            color: #000;
+            border-color: var(--accent);
+        }
+
+        .param-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .param-control {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .param-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .param-name {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .param-value {
+            font-size: 12px;
+            color: var(--accent);
+            font-family: 'SF Mono', monospace;
+        }
+
+        .param-slider {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            background: var(--bg-secondary);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .param-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 212, 168, 0.4);
+        }
+
+        /* Empty State */
+        .empty-state {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-text {
+            font-size: 18px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .empty-subtext {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* Import Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 40px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .modal-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+
+        .drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 60px 40px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--bg-tertiary);
+        }
+
+        .drop-zone:hover {
+            border-color: var(--accent);
+            background: rgba(0, 212, 168, 0.05);
+        }
+
+        .drop-zone.dragover {
+            border-color: var(--accent);
+            background: rgba(0, 212, 168, 0.1);
+        }
+
+        .drop-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .drop-text {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .drop-hint {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .modal-actions {
+            margin-top: 25px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.15s;
+        }
+
+        .btn:hover {
+            background: var(--bg-hover);
+        }
+
+        .btn.primary {
+            background: var(--accent);
+            color: #000;
+            border-color: var(--accent);
+            font-weight: 600;
+        }
+
+        .btn.primary:hover {
+            background: var(--accent-hover);
+        }
+
+        /* Context Menu */
+        .context-menu {
+            position: absolute;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px;
+            min-width: 180px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            z-index: 1000;
+            display: none;
+        }
+
+        .context-menu.active {
+            display: block;
+        }
+
+        .menu-item {
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .menu-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .menu-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 6px 0;
+        }
+
+        /* Scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+
+        /* Animations */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .track {
+            animation: slideIn 0.2s ease-out;
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="brand">
+            <div class="logo">◉</div>
+            <div class="brand-text">
+                <h1>WaveCraft Pro</h1>
+                <span>Professional Audio Editor</span>
+            </div>
+        </div>
+
+        <div class="transport">
+            <button class="tr-btn" onclick="goToStart()" title="Go to Start">⏮</button>
+            <button class="tr-btn" onclick="skipBackward()" title="Skip Backward">⏪</button>
+            <button class="tr-btn primary" id="playBtn" onclick="togglePlay()" title="Play/Pause">▶</button>
+            <button class="tr-btn" onclick="skipForward()" title="Skip Forward">⏩</button>
+            <button class="tr-btn" onclick="goToEnd()" title="Go to End">⏭</button>
+            <button class="tr-btn" id="loopBtn" onclick="toggleLoop()" title="Loop">🔁</button>
+            <button class="tr-btn record" id="recordBtn" onclick="toggleRecord()" title="Record">⏺</button>
+        </div>
+
+        <div class="time-display" id="timeDisplay">00:00:00.000</div>
+
+        <div class="tempo-control">
+            <button class="tempo-btn" onclick="showImport()">📁 Import</button>
+            <button class="tempo-btn" onclick="exportAudio()">💾 Export</button>
+        </div>
+    </header>
+
+    <!-- Main -->
+    <div class="main">
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="tool-group">
+                <button class="tool active" id="tool-select" onclick="setTool('select')">
+                    👆 Select Tool
+                </button>
+                <button class="tool" id="tool-move" onclick="setTool('move')">
+                    ✋ Time Shift
+                </button>
+                <button class="tool" id="tool-cut" onclick="setTool('cut')">
+                    ✂️ Split
+                </button>
+                <button class="tool" id="tool-trim" onclick="setTool('trim')">
+                    📐 Trim
+                </button>
+            </div>
+
+            <div class="tool-group">
+                <button class="tool" onclick="zoomIn()">🔍+</button>
+                <button class="tool" onclick="zoomOut()">🔍-</button>
+                <button class="tool" onclick="fitSelection()">↔️ Fit</button>
+            </div>
+
+            <div class="tool-group">
+                <button class="tool" onclick="undo()">↩️ Undo</button>
+                <button class="tool" onclick="redo()">↪️ Redo</button>
+            </div>
+
+            <div class="zoom-controls">
+                <span style="font-size: 12px; color: var(--text-secondary);">Zoom:</span>
+                <input type="range" class="zoom-slider" min="10" max="500" value="100" oninput="setZoom(this.value)">
+            </div>
+        </div>
+
+        <!-- Editor -->
+        <div class="editor">
+            <!-- Track Panel -->
+            <div class="track-panel">
+                <div class="panel-header">
+                    <span class="panel-title">Tracks</span>
+                    <button class="add-btn" onclick="addTrack()" title="Add Track">+</button>
+                </div>
+                <div class="tracks-list" id="trackList">
+                    <!-- Tracks will be added here -->
+                </div>
+            </div>
+
+            <!-- Timeline -->
+            <div class="timeline-container">
+                <div class="timeline-header" id="timelineRuler"></div>
+                <div class="timeline-tracks" id="timelineTracks">
+                    <div class="playhead" id="playhead" style="left: 0px;">
+                        <div class="playhead-time" id="playheadTime">00:00:00</div>
+                    </div>
+                    <div class="selection" id="selection" style="display: none;"></div>
+                    
+                    <div class="empty-state" id="emptyState">
+                        <div class="empty-icon">🎵</div>
+                        <div class="empty-text">No audio loaded</div>
+                        <div class="empty-subtext">Import audio to get started</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Effects Panel -->
+        <div class="effects-panel">
+            <div class="effects-list">
+                <div class="panel-header">
+                    <span class="panel-title">Effects Chain</span>
+                </div>
+                
+                <div class="effect-slot active" onclick="selectEffect('eq')">
+                    <div class="effect-header">
+                        <div class="effect-icon">📊</div>
+                        <div class="effect-name">Parametric EQ</div>
+                        <div class="effect-toggle active"></div>
+                    </div>
+                    <div class="effect-params">
+                        <div class="mini-param">
+                            <div class="mini-param-value">80Hz</div>
+                            <div class="mini-param-label">Low Cut</div>
+                        </div>
+                        <div class="mini-param">
+                            <div class="mini-param-value">+4dB</div>
+                            <div class="mini-param-label">Presence</div>
+                        </div>
+                        <div class="mini-param">
+                            <div class="mini-param-value">+2dB</div>
+                            <div class="mini-param-label">Air</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="effect-slot" onclick="selectEffect('compressor')">
+                    <div class="effect-header">
+                        <div class="effect-icon">🎚️</div>
+                        <div class="effect-name">Compressor</div>
+                        <div class="effect-toggle active"></div>
+                    </div>
+                    <div class="effect-params">
+                        <div class="mini-param">
+                            <div class="mini-param-value">-18dB</div>
+                            <div class="mini-param-label">Threshold</div>
+                        </div>
+                        <div class="mini-param">
+                            <div class="mini-param-value">4:1</div>
+                            <div class="mini-param-label">Ratio</div>
+                        </div>
+                        <div class="mini-param">
+                            <div class="mini-param-value">+6dB</div>
+                            <div class="mini-param-label">Gain</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="effect-slot" onclick="selectEffect('deesser')">
+                    <div class="effect-header">
+                        <div class="effect-icon">✨</div>
+                        <div class="effect-name">De-esser</div>
+                        <div class="effect-toggle"></div>
+                    </div>
+                </div>
+
+                <div class="effect-slot" onclick="selectEffect('limiter')">
+                    <div class="effect-header">
+                        <div class="effect-icon">🛑</div>
+                        <div class="effect-name">Limiter</div>
+                        <div class="effect-toggle active"></div>
+                    </div>
+                    <div class="effect-params">
+                        <div class="mini-param">
+                            <div class="mini-param-value">-1dB</div>
+                            <div class="mini-param-label">Ceiling</div>
+                        </div>
+                        <div class="mini-param">
+                            <div class="mini-param-value">-14LUFS</div>
+                            <div class="mini-param-label">Target</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="effect-editor" id="effectEditor">
+                <div class="editor-header">
+                    <div class="editor-title">Parametric EQ</div>
+                    <div class="preset-selector">
+                        <button class="preset-btn active" onclick="applyPreset('flat')">Flat</button>
+                        <button class="preset-btn" onclick="applyPreset('vocal')">Vocal</button>
+                        <button class="preset-btn" onclick="applyPreset('radio')">Radio</button>
+                        <button class="preset-btn" onclick="applyPreset('warm')">Warm</button>
+                    </div>
+                </div>
+
+                <div class="param-grid" id="paramGrid">
+                    <div class="param-control">
+                        <div class="param-header">
+                            <span class="param-name">Low Cut Filter</span>
+                            <span class="param-value" id="eq-low-val">80 Hz</span>
+                        </div>
+                        <input type="range" class="param-slider" min="20" max="200" value="80" 
+                               oninput="updateParam('eq-low', this.value, 'Hz')">
+                    </div>
+
+                    <div class="param-control">
+                        <div class="param-header">
+                            <span class="param-name">Low Shelf</span>
+                            <span class="param-value" id="eq-lowshelf-val">0 dB</span>
+                        </div>
+                        <input type="range" class="param-slider" min="-12" max="12" value="0" 
+                               oninput="updateParam('eq-lowshelf', this.value, 'dB')">
+                    </div>
+
+                    <div class="param-control">
+                        <div class="param-header">
+                            <span class="param-name">Low Mid</span>
+                            <span class="param-value" id="eq-lowmid-val">250 Hz +2 dB</span>
+                        </div>
+                        <input type="range" class="param-slider" min="-12" max="12" value="2" 
+                               oninput="updateParam('eq-lowmid', this.value, 'dB')">
+                    </div>
+
+                    <div class="param-control">
+                        <div class="param-header">
+                            <span class="param-name">Presence</span>
+                            <span class="param-value" id="eq-presence-val">5 kHz +4 dB</span>
+                        </div>
+                        <input type="range" class="param-slider" min="-12" max="12" value="4" 
+                               oninput="updateParam('eq-presence', this.value, 'dB')">
+                    </div>
+
+                    <div class="param-control">
+                        <div class="param-header">
+                            <span class="param-name">High Shelf (Air)</span>
+                            <span class="param-value" id="eq-air-val">12 kHz +3 dB</span>
+                        </div>
+                        <input type="range" class="param-slider" min="-12" max="12" value="3" 
+                               oninput="updateParam('eq-air', this.value, 'dB')">
+                    </div>
+
+                    <div class="param-control">
+                        <div class="param-header">
+                            <span class="param-name">Q Factor</span>
+                            <span class="param-value" id="eq-q-val">1.2</span>
+                        </div>
+                        <input type="range" class="param-slider" min="0.5" max="10" step="0.1" value="1.2" 
+                               oninput="updateParam('eq-q', this.value, '')">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div class="modal" id="importModal">
+        <div class="modal-content">
+            <h2 class="modal-title">Import Audio</h2>
+            <p class="modal-subtitle">Drag and drop files or click to browse</p>
+            
+            <div class="drop-zone" id="dropZone">
+                <div class="drop-icon">📁</div>
+                <div class="drop-text">Drop audio files here</div>
+                <div class="drop-hint">Supports WAV, MP3, FLAC, M4A</div>
+                <input type="file" id="fileInput" accept="audio/*" multiple style="display: none;">
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn" onclick="closeModal()">Cancel</button>
+                <button class="btn primary" onclick="document.getElementById('fileInput').click()">Browse Files</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div class="context-menu" id="contextMenu">
+        <div class="menu-item" onclick="cutSelection()">✂️ Cut</div>
+        <div class="menu-item" onclick="copySelection()">📋 Copy</div>
+        <div class="menu-item" onclick="paste()">📄 Paste</div>
+        <div class="menu-divider"></div>
+        <div class="menu-item" onclick="deleteSelection()">🗑️ Delete</div>
+        <div class="menu-item" onclick="silenceSelection()">🔇 Silence</div>
+        <div class="menu-divider"></div>
+        <div class="menu-item" onclick="normalize()">📊 Normalize</div>
+        <div class="menu-item" onclick="fadeIn()">📈 Fade In</div>
+        <div class="menu-item" onclick="fadeOut()">📉 Fade Out</div>
+    </div>
+
+    <script>
+        // State
+        let audioContext = null;
+        let isPlaying = false;
+        let isRecording = false;
+        let currentTime = 0;
+        let zoom = 100;
+        let tracks = [];
+        let clips = [];
+        let selectedTrack = null;
+        let selectedClip = null;
+        let selectionStart = null;
+        let selectionEnd = null;
+        let undoStack = [];
+        let redoStack = [];
+
+        // Initialize
+        function init() {
+            // Check for Web Audio API support
+            if (!window.AudioContext && !window.webkitAudioContext) {
+                alert('Web Audio API not supported in this browser');
+                return;
+            }
+            
+            // Add keyboard shortcuts
+            document.addEventListener('keydown', handleKeyDown);
+            
+            // Setup drag and drop
+            setupDragDrop();
+            
+            // Setup context menu
+            setupContextMenu();
+        }
+
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        // Transport Controls
+        function togglePlay() {
+            initAudio();
+            const btn = document.getElementById('playBtn');
+            
+            if (isPlaying) {
+                pause();
+            } else {
+                play();
+            }
+        }
+
+        function play() {
+            isPlaying = true;
+            document.getElementById('playBtn').textContent = '⏸';
+            animate();
+        }
+
+        function pause() {
+            isPlaying = false;
+            document.getElementById('playBtn').textContent = '▶';
+        }
+
+        function animate() {
+            if (!isPlaying) return;
+            
+            currentTime += 0.016;
+            updatePlayhead();
+            updateMeters();
+            
+            requestAnimationFrame(animate);
+        }
+
+        function updatePlayhead() {
+            const playhead = document.getElementById('playhead');
+            const pixels = currentTime * (zoom / 10);
+            playhead.style.left = `${pixels}px`;
+            
+            // Update time display
+            const mins = Math.floor(currentTime / 60);
+            const secs = Math.floor(currentTime % 60);
+            const ms = Math.floor((currentTime % 1) * 1000);
+            
+            document.getElementById('timeDisplay').textContent = 
+                `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`;
+            
+            document.getElementById('playheadTime').textContent = 
+                `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}:${ms.toString().padStart(2, '0')}`;
+        }
+
+        function updateMeters() {
+            // Simulate meter movement
+            tracks.forEach(track => {
+                if (!track.muted && isPlaying) {
+                    const level = Math.random() * 80;
+                    // Update visual meters if they exist
+                }
+            });
+        }
+
+        function goToStart() {
+            currentTime = 0;
+            updatePlayhead();
+        }
+
+        function goToEnd() {
+            // Find end of last clip
+            let end = 0;
+            clips.forEach(clip => {
+                end = Math.max(end, clip.start + clip.duration);
+            });
+            currentTime = end || 60;
+            updatePlayhead();
+        }
+
+        function skipBackward() {
+            currentTime = Math.max(0, currentTime - 5);
+            updatePlayhead();
+        }
+
+        function skipForward() {
+            currentTime += 5;
+            updatePlayhead();
+        }
+
+        function toggleLoop() {
+            document.getElementById('loopBtn').classList.toggle('active');
+        }
+
+        function toggleRecord() {
+            const btn = document.getElementById('recordBtn');
+            isRecording = !isRecording;
+            btn.classList.toggle('active');
+            
+            if (isRecording) {
+                initAudio();
+                // Start recording logic
+            }
+        }
+
+        // Tools
+        function setTool(tool) {
+            document.querySelectorAll('.tool').forEach(t => t.classList.remove('active'));
+            document.getElementById(`tool-${tool}`).classList.add('active');
+        }
+
+        function zoomIn() {
+            zoom = Math.min(500, zoom * 1.5);
+            updateZoom();
+        }
+
+        function zoomOut() {
+            zoom = Math.max(10, zoom / 1.5);
+            updateZoom();
+        }
+
+        function setZoom(value) {
+            zoom = parseInt(value);
+            updateZoom();
+        }
+
+        function updateZoom() {
+            // Redraw waveforms at new zoom level
+            clips.forEach(clip => {
+                if (clip.element) {
+                    clip.element.style.width = `${clip.duration * (zoom / 10)}px`;
+                }
+            });
+            updatePlayhead();
+        }
+
+        function fitSelection() {
+            if (selectionStart !== null && selectionEnd !== null) {
+                const duration = selectionEnd - selectionStart;
+                const containerWidth = document.querySelector('.timeline-tracks').clientWidth;
+                zoom = (containerWidth / duration) * 10;
+                currentTime = selectionStart;
+                updateZoom();
+                updatePlayhead();
+            }
+        }
+
+        // Tracks
+        function addTrack(type = 'vocal') {
+            const trackId = `track-${tracks.length}`;
+            const track = {
+                id: trackId,
+                type: type,
+                name: type === 'vocal' ? `Vocal ${tracks.filter(t => t.type === 'vocal').length + 1}` : 
+                      type === 'beat' ? `Beat ${tracks.filter(t => t.type === 'beat').length + 1}` : 
+                      `Track ${tracks.length + 1}`,
+                muted: false,
+                solo: false,
+                volume: 80,
+                pan: 0,
+                armed: false
+            };
+            
+            tracks.push(track);
+            renderTrack(track);
+            createTimelineLane(track);
+            
+            // Hide empty state
+            document.getElementById('emptyState').style.display = 'none';
+        }
+
+        function renderTrack(track) {
+            const list = document.getElementById('trackList');
+            const div = document.createElement('div');
+            div.className = 'track';
+            div.id = track.id;
+            div.innerHTML = `
+                <div class="track-header">
+                    <div class="track-info">
+                        <div class="track-color ${track.type}"></div>
+                        <div class="track-name">${track.name}</div>
+                        <div class="track-type">${track.type}</div>
+                    </div>
+                </div>
+                <div class="track-controls">
+                    <button class="tc-btn mute ${track.muted ? 'active' : ''}" onclick="toggleMute('${track.id}')">M</button>
+                    <button class="tc-btn solo ${track.solo ? 'active' : ''}" onclick="toggleSolo('${track.id}')">S</button>
+                    <button class="tc-btn arm ${track.armed ? 'active' : ''}" onclick="toggleArm('${track.id}')">●</button>
+                </div>
+                <div class="track-fader">
+                    <span class="fader-label">Vol</span>
+                    <input type="range" class="fader" min="0" max="100" value="${track.volume}" 
+                           oninput="setVolume('${track.id}', this.value)">
+                </div>
+            `;
+            
+            div.onclick = () => selectTrack(track.id);
+            list.appendChild(div);
+        }
+
+        function createTimelineLane(track) {
+            const container = document.getElementById('timelineTracks');
+            const lane = document.createElement('div');
+            lane.className = 'timeline-track';
+            lane.id = `lane-${track.id}`;
+            lane.innerHTML = `
+                <div class="track-lane" id="lane-content-${track.id}"></div>
+            `;
+            container.appendChild(lane);
+        }
+
+        function selectTrack(trackId) {
+            document.querySelectorAll('.track').forEach(t => t.classList.remove('selected'));
+            document.getElementById(trackId).classList.add('selected');
+            selectedTrack = trackId;
+        }
+
+        function toggleMute(trackId) {
+            const track = tracks.find(t => t.id === trackId);
+            track.muted = !track.muted;
+            event.target.classList.toggle('active');
+        }
+
+        function toggleSolo(trackId) {
+            const track = tracks.find(t => t.id === trackId);
+            track.solo = !track.solo;
+            event.target.classList.toggle('active');
+        }
+
+        function toggleArm(trackId) {
+            const track = tracks.find(t => t.id === trackId);
+            track.armed = !track.armed;
+            event.target.classList.toggle('active');
+        }
+
+        function setVolume(trackId, value) {
+            const track = tracks.find(t => t.id === trackId);
+            track.volume = parseInt(value);
+        }
+
+        // File Import
+        function showImport() {
+            document.getElementById('importModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('importModal').classList.remove('active');
+        }
+
+        function setupDragDrop() {
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            
+            dropZone.addEventListener('click', () => fileInput.click());
+            
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+            
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                handleFiles(e.dataTransfer.files);
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+        }
+
+        async function handleFiles(files) {
+            initAudio();
+            closeModal();
+            
+            for (let file of files) {
+                await loadAudioFile(file);
+            }
+        }
+
+        async function loadAudioFile(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+            
+            // Determine type from filename
+            const type = file.name.toLowerCase().includes('beat') || 
+                        file.name.toLowerCase().includes('instr') ? 'beat' : 'vocal';
+            
+            // Create track if needed
+            if (tracks.length === 0) {
+                addTrack(type);
+            }
+            
+            const trackId = selectedTrack || tracks[tracks.length - 1].id;
+            
+            const clip = {
+                id: `clip-${clips.length}`,
+                track: trackId,
+                buffer: audioBuffer,
+                start: 0,
+                duration: audioBuffer.duration,
+                offset: 0,
+                name: file.name,
+                type: type
+            };
+            
+            clips.push(clip);
+            renderClip(clip);
+        }
+
+        function renderClip(clip) {
+            const lane = document.getElementById(`lane-content-${clip.track}`);
+            if (!lane) return;
+            
+            const div = document.createElement('div');
+            div.className = `audio-clip clip-${clip.type}`;
+            div.id = clip.id;
+            div.style.left = '0px';
+            div.style.width = `${clip.duration * (zoom / 10)}px`;
+            
+            // Create waveform canvas
+            const canvas = document.createElement('canvas');
+            canvas.className = 'clip-waveform';
+            canvas.width = clip.duration * (zoom / 10);
+            canvas.height = 100;
+            
+            drawWaveform(canvas, clip.buffer, clip.type);
+            
+            div.innerHTML = `
+                <div class="clip-content">
+                    <canvas class="clip-waveform" id="waveform-${clip.id}"></canvas>
+                    <div class="clip-info">${clip.name}</div>
+                    <div class="clip-handle left"></div>
+                    <div class="clip-handle right"></div>
+                </div>
+            `;
+            
+            // Replace canvas in DOM
+            setTimeout(() => {
+                const wf = div.querySelector('.clip-waveform');
+                wf.replaceWith(canvas);
+            }, 0);
+            
+            // Event listeners
+            div.addEventListener('mousedown', (e) => startDrag(e, clip));
+            div.addEventListener('contextmenu', (e) => showContextMenu(e, clip));
+            
+            lane.appendChild(div);
+            clip.element = div;
+        }
+
+        function drawWaveform(canvas, buffer, type) {
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            const data = buffer.getChannelData(0);
+            const step = Math.ceil(data.length / width);
+            const amp = height / 2;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw center line
+            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+            ctx.beginPath();
+            ctx.moveTo(0, amp);
+            ctx.lineTo(width, amp);
+            ctx.stroke();
+            
+            // Draw waveform
+            ctx.fillStyle = type === 'vocal' ? 'rgba(255,255,255,0.8)' : 
+                           type === 'beat' ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.7)';
+            
+            for (let i = 0; i < width; i++) {
+                let min = 1.0;
+                let max = -1.0;
+                
+                for (let j = 0; j < step; j++) {
+                    const datum = data[i * step + j];
+                    if (datum < min) min = datum;
+                    if (datum > max) max = datum;
+                }
+                
+                const y = (1 + min) * amp;
+                const h = Math.max(1, (max - min) * amp);
+                ctx.fillRect(i, y, 1, h);
+            }
+        }
+
+        // Clip Dragging
+        function startDrag(e, clip) {
+            if (e.target.classList.contains('clip-handle')) {
+                startResize(e, clip, e.target.classList.contains('left'));
+                return;
+            }
+            
+            selectedClip = clip;
+            document.querySelectorAll('.audio-clip').forEach(c => c.classList.remove('selected'));
+            clip.element.classList.add('selected');
+            
+            const startX = e.clientX;
+            const startLeft = parseInt(clip.element.style.left) || 0;
+            
+            function onMouseMove(e) {
+                const delta = e.clientX - startX;
+                const newLeft = startLeft + delta;
+                const timePos = newLeft / (zoom / 10);
+                
+                // Snap to grid (0.1 second increments)
+                const snappedTime = Math.round(timePos * 10) / 10;
+                clip.start = snappedTime;
+                clip.element.style.left = `${snappedTime * (zoom / 10)}px`;
+            }
+            
+            function onMouseUp() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+            
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        }
+
+        function startResize(e, clip, isLeft) {
+            e.stopPropagation();
+            // Implement resize logic
+        }
+
+        // Context Menu
+        function setupContextMenu() {
+            const menu = document.getElementById('contextMenu');
+            
+            document.addEventListener('click', () => {
+                menu.classList.remove('active');
+            });
+        }
+
+        function showContextMenu(e, clip) {
+            e.preventDefault();
+            const menu = document.getElementById('contextMenu');
+            menu.style.left = `${e.pageX}px`;
+            menu.style.top = `${e.pageY}px`;
+            menu.classList.add('active');
+            selectedClip = clip;
+        }
+
+        // Editing Functions
+        function cutSelection() {
+            saveState();
+            // Implement cut
+        }
+
+        function copySelection() {
+            // Implement copy
+        }
+
+        function paste() {
+            saveState();
+            // Implement paste
+        }
+
+        function deleteSelection() {
+            saveState();
+            if (selectedClip) {
+                selectedClip.element.remove();
+                clips = clips.filter(c => c !== selectedClip);
+                selectedClip = null;
+            }
+        }
+
+        function silenceSelection() {
+            saveState();
+            // Implement silence
+        }
+
+        function normalize() {
+            saveState();
+            // Implement normalize
+        }
+
+        function fadeIn() {
+            saveState();
+            // Implement fade in
+        }
+
+        function fadeOut() {
+            saveState();
+            // Implement fade out
+        }
+
+        // Undo/Redo
+        function saveState() {
+            undoStack.push(JSON.stringify({tracks, clips, currentTime}));
+            redoStack = [];
+        }
+
+        function undo() {
+            if (undoStack.length > 0) {
+                redoStack.push(JSON.stringify({tracks, clips, currentTime}));
+                const state = JSON.parse(undoStack.pop());
+                restoreState(state);
+            }
+        }
+
+        function redo() {
+            if (redoStack.length > 0) {
+                undoStack.push(JSON.stringify({tracks, clips, currentTime}));
+                const state = JSON.parse(redoStack.pop());
+                restoreState(state);
+            }
+        }
+
+        function restoreState(state) {
+            // Implement state restoration
+        }
+
+        // Effects
+        function selectEffect(effect) {
+            document.querySelectorAll('.effect-slot').forEach(s => s.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            // Update editor panel based on effect
+            updateEffectEditor(effect);
+        }
+
+        function updateEffectEditor(effect) {
+            const editor = document.getElementById('effectEditor');
+            const titles = {
+                'eq': 'Parametric EQ',
+                'compressor': 'Compressor',
+                'deesser': 'De-esser',
+                'limiter': 'Limiter'
+            };
+            
+            editor.querySelector('.editor-title').textContent = titles[effect] || effect;
+        }
+
+        function updateParam(id, value, unit) {
+            document.getElementById(`${id}-val`).textContent = `${value} ${unit}`;
+        }
+
+        function applyPreset(preset) {
+            document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const presets = {
+                'flat': { low: 80, lowshelf: 0, lowmid: 0, presence: 0, air: 0 },
+                'vocal': { low: 80, lowshelf: 0, lowmid: 2, presence: 4, air: 3 },
+                'radio': { low: 100, lowshelf: -2, lowmid: 3, presence: 6, air: 4 },
+                'warm': { low: 60, lowshelf: 2, lowmid: 4, presence: 2, air: 1 }
+            };
+            
+            const p = presets[preset];
+            if (p) {
+                updateParam('eq-low', p.low, 'Hz');
+                updateParam('eq-lowshelf', p.lowshelf, 'dB');
+                updateParam('eq-lowmid', `250 Hz ${p.lowmid > 0 ? '+' : ''}${p.lowmid}`, 'dB');
+                updateParam('eq-presence', `5 kHz ${p.presence > 0 ? '+' : ''}${p.presence}`, 'dB');
+                updateParam('eq-air', `12 kHz ${p.air > 0 ? '+' : ''}${p.air}`, 'dB');
+            }
+        }
+
+        // Export
+        function exportAudio() {
+            // Implement export logic
+            alert('Export feature: Would render all tracks to WAV/MP3');
+        }
+
+        // Keyboard Shortcuts
+        function handleKeyDown(e) {
+            if (e.target.tagName === 'INPUT') return;
+            
+            switch(e.key) {
+                case ' ':
+                    e.preventDefault();
+                    togglePlay();
+                    break;
+                case 'Delete':
+                case 'Backspace':
+                    if (selectedClip) deleteSelection();
+                    break;
+                case 'z':
+                    if (e.ctrlKey || e.metaKey) {
+                        e.preventDefault();
+                        if (e.shiftKey) redo();
+                        else undo();
+                    }
+                    break;
+                case '1':
+                    setTool('select');
+                    break;
+                case '2':
+                    setTool('move');
+                    break;
+                case '3':
+                    setTool('cut');
+                    break;
+            }
+        }
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>
