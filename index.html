@@ -2088,4 +2088,481 @@
                 alert('Please import audio first before exporting');
                 return;
             }
-            document.getElementById
+            document.getElementById('exportModal').classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            
+            // Reset export status
+            if (modalId === 'exportModal') {
+                document.getElementById('exportStatus').classList.remove('active');
+                document.getElementById('exportProgress').style.width = '0%';
+            }
+        }
+
+        function selectExportFormat(format) {
+            selectedExportFormat = format;
+            
+            document.querySelectorAll('.export-option').forEach(opt => {
+                opt.classList.remove('selected');
+                opt.querySelector('div:last-child').style.display = 'none';
+            });
+            
+            document.getElementById(`export-${format}`).classList.add('selected');
+            document.getElementById(`export-${format}`).querySelector('div:last-child').style.display = 'block';
+        }
+
+        async function startExport() {
+            const statusEl = document.getElementById('exportStatus');
+            const progressEl = document.getElementById('exportProgress');
+            const statusText = document.getElementById('exportStatusText');
+            
+            statusEl.classList.add('active');
+            statusText.textContent = 'Rendering audio with effects...';
+            
+            // Simulate progress
+            for (let i = 0; i <= 100; i += 10) {
+                progressEl.style.width = `${i}%`;
+                await sleep(100);
+            }
+            
+            statusText.textContent = 'Creating download...';
+            
+            // Actually create and download the file
+            await exportAudioFile();
+            
+            statusText.textContent = 'Export complete!';
+            progressEl.style.width = '100%';
+            
+            setTimeout(() => {
+                closeModal('exportModal');
+            }, 1000);
+        }
+
+        async function exportAudioFile() {
+            if (!audioContext || clips.length === 0) return;
+            
+            // Find the longest duration
+            let maxDuration = 0;
+            clips.forEach(clip => {
+                maxDuration = Math.max(maxDuration, clip.start + clip.buffer.duration);
+            });
+            
+            // Create offline context for rendering
+            const offlineCtx = new OfflineAudioContext(2, maxDuration * audioContext.sampleRate, audioContext.sampleRate);
+            
+            // Recreate effect nodes in offline context
+            const eqHighpass = offlineCtx.createBiquadFilter();
+            eqHighpass.type = 'highpass';
+            eqHighpass.frequency.value = effectParams.eq.enabled ? effectParams.eq.lowCut : 20;
+            
+            const eqLowMid = offlineCtx.createBiquadFilter();
+            eqLowMid.type = 'peaking';
+            eqLowMid.frequency.value = 250;
+            eqLowMid.gain.value = effectParams.eq.enabled ? effectParams.eq.lowMidGain : 0;
+            
+            const eqPresence = offlineCtx.createBiquadFilter();
+            eqPresence.type = 'peaking';
+            eqPresence.frequency.value = 5000;
+            eqPresence.gain.value = effectParams.eq.enabled ? effectParams.eq.presenceGain : 0;
+            
+            const eqAir = offlineCtx.createBiquadFilter();
+            eqAir.type = 'highshelf';
+            eqAir.frequency.value = 12000;
+            eqAir.gain.value = effectParams.eq.enabled ? effectParams.eq.airGain : 0;
+            
+            // Connect EQ
+            eqHighpass.connect(eqLowMid);
+            eqLowMid.connect(eqPresence);
+            eqPresence.connect(eqAir);
+            
+            // Compressor
+            const compressor = offlineCtx.createDynamicsCompressor();
+            compressor.threshold.value = effectParams.compressor.enabled ? effectParams.compressor.threshold : 0;
+            compressor.ratio.value = effectParams.compressor.enabled ? effectParams.compressor.ratio : 1;
+            compressor.attack.value = effectParams.compressor.attack / 1000;
+            compressor.release.value = effectParams.compressor.release / 1000;
+            
+            const makeupGain = offlineCtx.createGain();
+            makeupGain.gain.value = effectParams.compressor.enabled ? dbToGain(effectParams.compressor.makeupGain) : 1;
+            
+            eqAir.connect(compressor);
+            compressor.connect(makeupGain);
+            
+            // De-esser
+            const deesser = offlineCtx.createBiquadFilter();
+            deesser.type = 'peaking';
+            deesser.frequency.value = effectParams.deesser.frequency;
+            deesser.gain.value = effectParams.deesser.enabled ? effectParams.deesser.reduction : 0;
+            
+            makeupGain.connect(deesser);
+            
+            // Limiter
+            const limiter = offlineCtx.createDynamicsCompressor();
+            limiter.threshold.value = effectParams.limiter.enabled ? effectParams.limiter.threshold : 0;
+            limiter.ratio.value = 20;
+            
+            const ceilingGain = offlineCtx.createGain();
+            ceilingGain.gain.value = effectParams.limiter.enabled ? dbToGain(effectParams.limiter.ceiling) : 1;
+            
+            deesser.connect(limiter);
+            limiter.connect(ceilingGain);
+            ceilingGain.connect(offlineCtx.destination);
+            
+            // Render all clips
+            clips.forEach(clip => {
+                if (clip.buffer) {
+                    const source = offlineCtx.createBufferSource();
+                    source.buffer = clip.buffer;
+                    
+                    const trackGain = offlineCtx.createGain();
+                    trackGain.gain.value = (clip.track.volume / 100) || 0.8;
+                    
+                    source.connect(eqHighpass);
+                    source.connect(trackGain);
+                    trackGain.connect(offlineCtx.destination);
+                    
+                    source.start(clip.start);
+                }
+            });
+            
+            // Render
+            const renderedBuffer = await offlineCtx.startRendering();
+            
+            // Convert to WAV
+            const wavBlob = bufferToWave(renderedBuffer);
+            
+            // Download
+            const url = URL.createObjectURL(wavBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `wavecraft_export_${new Date().getTime()}.wav`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function bufferToWave(abuffer) {
+            let numOfChan = abuffer.numberOfChannels;
+            let length = abuffer.length * numOfChan * 2 + 44;
+            let buffer = new ArrayBuffer(length);
+            let view = new DataView(buffer);
+            let channels = [];
+            let i;
+            let sample;
+            let offset = 0;
+            let pos = 0;
+
+            // write WAVE header
+            setUint32(0x46464952); // "RIFF"
+            setUint32(length - 8); // file length - 8
+            setUint32(0x45564157); // "WAVE"
+
+            setUint32(0x20746d66); // "fmt " chunk
+            setUint32(16); // length = 16
+            setUint16(1); // PCM (uncompressed)
+            setUint16(numOfChan);
+            setUint32(abuffer.sampleRate);
+            setUint32(abuffer.sampleRate * 2 * numOfChan); // avg. bytes/sec
+            setUint16(numOfChan * 2); // block-align
+            setUint16(16); // 16-bit (hardcoded in this demo)
+
+            setUint32(0x61746164); // "data" - chunk
+            setUint32(length - pos - 4); // chunk length
+
+            // write interleaved data
+            for(i = 0; i < abuffer.numberOfChannels; i++) {
+                channels.push(abuffer.getChannelData(i));
+            }
+
+            while(pos < length) {
+                for(i = 0; i < numOfChan; i++) {
+                    sample = Math.max(-1, Math.min(1, channels[i][offset])); // clamp
+                    sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767)|0; // scale to 16-bit signed int
+                    view.setInt16(pos, sample, true); // write 16-bit sample
+                    pos += 2;
+                }
+                offset++;
+            }
+
+            return new Blob([buffer], {type: "audio/wav"});
+
+            function setUint16(data) {
+                view.setUint16(pos, data, true);
+                pos += 2;
+            }
+
+            function setUint32(data) {
+                view.setUint32(pos, data, true);
+                pos += 4;
+            }
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // ==========================================
+        // TRACK & FILE MANAGEMENT
+        // ==========================================
+
+        function addTrack(type = 'vocal') {
+            const id = tracks.length;
+            const track = {
+                id,
+                type,
+                name: type === 'vocal' ? `Vocal ${id + 1}` : `Track ${id + 1}`,
+                muted: false,
+                solo: false,
+                volume: 80
+            };
+            
+            tracks.push(track);
+            
+            const div = document.createElement('div');
+            div.className = 'track';
+            div.id = `track-${id}`;
+            div.innerHTML = `
+                <div class="track-header">
+                    <div class="track-icon ${type}">${type === 'vocal' ? '🎤' : '🎵'}</div>
+                    <div class="track-info">
+                        <div class="track-name">${track.name}</div>
+                        <div class="track-type">${type}</div>
+                    </div>
+                </div>
+                <div class="track-controls">
+                    <button class="tc-btn mute" onclick="toggleMute(${id})">M</button>
+                    <button class="tc-btn solo" onclick="toggleSolo(${id})">S</button>
+                </div>
+                <div class="track-fader">
+                    <span class="fader-label">Vol</span>
+                    <input type="range" class="fader" min="0" max="100" value="${track.volume}" 
+                           oninput="setVolume(${id}, this.value)">
+                </div>
+            `;
+            
+            div.onclick = () => selectTrack(id);
+            document.getElementById('trackList').appendChild(div);
+            
+            const lane = document.createElement('div');
+            lane.className = 'timeline-track';
+            lane.id = `lane-${id}`;
+            lane.innerHTML = `<div class="track-lane" id="lane-content-${id}"></div>`;
+            document.getElementById('timelineTracks').appendChild(lane);
+            
+            addMixerChannel(track);
+            selectTrack(id);
+        }
+
+        function addMixerChannel(track) {
+            const mixer = document.getElementById('mixer');
+            const ch = document.createElement('div');
+            ch.className = 'mixer-channel';
+            ch.id = `mixer-${track.id}`;
+            ch.innerHTML = `
+                <div class="ch-label">${track.name}</div>
+                <div class="ch-meter">
+                    <div class="ch-meter-fill" id="meter-${track.id}" style="height: 0%;"></div>
+                </div>
+                <input type="range" class="ch-fader" min="0" max="100" value="${track.volume}" 
+                       orient="vertical" oninput="setVolume(${track.id}, this.value)">
+            `;
+            mixer.appendChild(ch);
+        }
+
+        function selectTrack(id) {
+            document.querySelectorAll('.track').forEach(t => t.classList.remove('active'));
+            document.getElementById(`track-${id}`)?.classList.add('active');
+            selectedTrack = tracks[id];
+        }
+
+        function toggleMute(id) {
+            const track = tracks[id];
+            track.muted = !track.muted;
+            event.target.classList.toggle('active');
+            if (isPlaying) { pause(); play(); }
+        }
+
+        function toggleSolo(id) {
+            const track = tracks[id];
+            track.solo = !track.solo;
+            event.target.classList.toggle('active');
+        }
+
+        function setVolume(id, value) {
+            const track = tracks[id];
+            if (track) track.volume = parseInt(value);
+        }
+
+        // ==========================================
+        // FILE IMPORT
+        // ==========================================
+
+        function showImport() {
+            document.getElementById('importModal').classList.add('active');
+        }
+
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+        async function handleFiles(files) {
+            if (!audioContext) {
+                alert('Please start the audio engine first');
+                return;
+            }
+            
+            closeModal('importModal');
+            
+            for (let file of files) {
+                await loadAudioFile(file);
+            }
+        }
+
+        async function loadAudioFile(file) {
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                
+                const type = file.name.toLowerCase().includes('beat') ? 'beat' : 'vocal';
+                
+                if (tracks.length === 0) addTrack(type);
+                
+                const track = selectedTrack || tracks[tracks.length - 1];
+                
+                const clip = {
+                    id: clips.length,
+                    track,
+                    buffer: audioBuffer,
+                    start: 0,
+                    duration: audioBuffer.duration,
+                    name: file.name.replace(/\.[^/.]+$/, "")
+                };
+                
+                clips.push(clip);
+                renderClip(clip);
+                
+                console.log(`✅ Loaded: ${file.name}`);
+                
+            } catch (error) {
+                console.error('Error loading audio:', error);
+                alert('Error loading file. Please try WAV or MP3 format.');
+            }
+        }
+
+        function renderClip(clip) {
+            const lane = document.getElementById(`lane-content-${clip.track.id}`);
+            if (!lane) return;
+            
+            const div = document.createElement('div');
+            div.className = `audio-clip clip-${clip.track.type}`;
+            div.style.left = '0px';
+            div.style.width = `${clip.duration * 100}px`;
+            
+            const canvas = document.createElement('canvas');
+            canvas.className = 'clip-waveform';
+            canvas.width = Math.max(50, clip.duration * 100);
+            canvas.height = 80;
+            
+            drawWaveform(canvas, clip.buffer, clip.track.type);
+            
+            div.innerHTML = `<div class="clip-info">${clip.name}</div>`;
+            div.appendChild(canvas);
+            
+            makeDraggable(div, clip);
+            
+            lane.appendChild(div);
+            clip.element = div;
+        }
+
+        function drawWaveform(canvas, buffer, type) {
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            const data = buffer.getChannelData(0);
+            const step = Math.ceil(data.length / width);
+            const amp = height / 2;
+            
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = 'rgba(255,255,255,0.8)';
+            
+            for (let i = 0; i < width; i++) {
+                let min = 1.0, max = -1.0;
+                for (let j = 0; j < step; j++) {
+                    const datum = data[i * step + j];
+                    if (datum < min) min = datum;
+                    if (datum > max) max = datum;
+                }
+                const y = (1 + min) * amp;
+                const h = Math.max(1, (max - min) * amp);
+                ctx.fillRect(i, y, 1, h);
+            }
+        }
+
+        function makeDraggable(element, clip) {
+            let isDragging = false;
+            let startX, startLeft;
+            
+            element.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                startX = e.clientX;
+                startLeft = parseFloat(element.style.left) || 0;
+                element.style.cursor = 'grabbing';
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const delta = e.clientX - startX;
+                const newLeft = startLeft + delta;
+                clip.start = Math.max(0, Math.round((newLeft / 100) * 10) / 10);
+                element.style.left = `${clip.start * 100}px`;
+            });
+            
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+                element.style.cursor = 'grab';
+            });
+        }
+
+        // ==========================================
+        // TOOLS
+        // ==========================================
+
+        function setTool(tool) {
+            document.querySelectorAll('.tool').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function zoomIn() {}
+        function zoomOut() {}
+        function fitToScreen() {}
+        function undo() {}
+        function redo() {}
+        function fadeIn() {}
+        function fadeOut() {}
+        function normalize() {}
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT') return;
+            if (e.key === ' ') {
+                e.preventDefault();
+                togglePlay();
+            }
+        });
+
+        console.log('WaveCraft Pro AI loaded. Click "Start AI Audio Engine" to begin.');
+    </script>
+</body>
+</html>
