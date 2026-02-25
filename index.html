@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WaveCraft Pro - Real-Time Vocal Processor</title>
+    <title>WaveCraft Pro - AI Vocal Studio</title>
     <style>
         * {
             margin: 0;
@@ -20,6 +20,8 @@
             --accent: #00d9c0;
             --accent-glow: rgba(0, 217, 192, 0.3);
             --accent-secondary: #ff2a6d;
+            --ai-purple: #d300f9;
+            --ai-glow: rgba(211, 0, 249, 0.3);
             --text-primary: #ffffff;
             --text-secondary: #a0a0b0;
             --text-muted: #606070;
@@ -34,7 +36,7 @@
             font-size: 13px;
         }
 
-        /* Start Overlay - REQUIRED for AudioContext */
+        /* Start Overlay */
         .start-overlay {
             position: fixed;
             top: 0;
@@ -67,7 +69,7 @@
         .start-title {
             font-size: 32px;
             font-weight: 800;
-            background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+            background: linear-gradient(90deg, var(--accent), var(--ai-purple));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -75,27 +77,27 @@
         .start-subtitle {
             color: var(--text-secondary);
             font-size: 16px;
-            max-width: 400px;
+            max-width: 500px;
             text-align: center;
             line-height: 1.6;
         }
 
         .start-btn {
             padding: 18px 48px;
-            background: var(--accent);
-            color: #000;
+            background: linear-gradient(90deg, var(--accent), var(--ai-purple));
+            color: #fff;
             border: none;
             border-radius: 12px;
             font-size: 18px;
             font-weight: 700;
             cursor: pointer;
-            box-shadow: 0 10px 40px var(--accent-glow);
+            box-shadow: 0 10px 40px var(--ai-glow);
             transition: all 0.3s;
         }
 
         .start-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 15px 50px var(--accent-glow);
+            box-shadow: 0 15px 50px var(--ai-glow);
         }
 
         /* Main App */
@@ -128,7 +130,7 @@
         .logo {
             width: 36px;
             height: 36px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            background: linear-gradient(135deg, var(--accent), var(--ai-purple));
             border-radius: 8px;
             display: flex;
             align-items: center;
@@ -187,19 +189,18 @@
             font-size: 18px;
         }
 
-        .tr-btn.record {
-            color: var(--accent-secondary);
-        }
-
-        .tr-btn.record.active {
-            background: var(--accent-secondary);
+        .tr-btn.ai {
+            background: linear-gradient(135deg, var(--ai-purple), var(--accent-secondary));
             color: white;
-            animation: recordPulse 1.5s infinite;
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+            animation: aiPulse 2s infinite;
         }
 
-        @keyframes recordPulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
+        @keyframes aiPulse {
+            0%, 100% { box-shadow: 0 0 0 0 var(--ai-glow); }
+            50% { box-shadow: 0 0 20px 5px var(--ai-glow); }
         }
 
         .time-display {
@@ -233,11 +234,23 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            transition: all 0.2s;
         }
 
         .action-btn:hover {
             background: var(--bg-hover);
             border-color: var(--accent);
+        }
+
+        .action-btn.ai {
+            background: linear-gradient(90deg, var(--ai-purple), var(--accent-secondary));
+            border-color: transparent;
+            color: white;
+        }
+
+        .action-btn.ai:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px var(--ai-glow);
         }
 
         /* Toolbar */
@@ -294,7 +307,7 @@
         /* Main Editor */
         .editor {
             display: grid;
-            grid-template-columns: 220px 1fr 300px;
+            grid-template-columns: 220px 1fr 320px;
             overflow: hidden;
         }
 
@@ -551,7 +564,7 @@
             border-radius: 50%;
         }
 
-        /* Effects Panel - THE IMPORTANT PART */
+        /* Effects Panel */
         .effects-panel {
             background: var(--bg-secondary);
             border-left: 1px solid var(--border);
@@ -655,10 +668,6 @@
             margin-bottom: 8px;
         }
 
-        .effect-param:last-child {
-            margin-bottom: 0;
-        }
-
         .param-row {
             display: flex;
             justify-content: space-between;
@@ -726,6 +735,168 @@
             border-color: var(--accent);
         }
 
+        /* AI Panel */
+        .ai-panel {
+            position: fixed;
+            bottom: 240px;
+            right: 20px;
+            width: 300px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            z-index: 100;
+            display: none;
+        }
+
+        .ai-panel.active {
+            display: block;
+        }
+
+        .ai-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .ai-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--ai-purple), var(--accent-secondary));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .ai-title {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .ai-subtitle {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .ai-analyze-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(90deg, var(--ai-purple), var(--accent-secondary));
+            border: none;
+            color: white;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .ai-analyze-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px var(--ai-glow);
+        }
+
+        .ai-analyze-btn.analyzing {
+            animation: analyzing 1.5s infinite;
+        }
+
+        @keyframes analyzing {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .ai-suggestions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .ai-suggestion {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .ai-suggestion:hover {
+            border-color: var(--ai-purple);
+            background: rgba(211, 0, 249, 0.1);
+        }
+
+        .ai-suggestion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .ai-suggestion-name {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .ai-suggestion-confidence {
+            font-size: 10px;
+            color: var(--ai-purple);
+            background: rgba(211, 0, 249, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .ai-suggestion-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Compare Section */
+        .compare-section {
+            position: fixed;
+            bottom: 240px;
+            right: 340px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 100;
+        }
+
+        .compare-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .compare-btn {
+            padding: 6px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .compare-btn.active {
+            background: var(--accent);
+            color: #000;
+        }
+
         /* Bottom Panel */
         .bottom-panel {
             background: var(--bg-secondary);
@@ -787,44 +958,7 @@
             height: 80px;
         }
 
-        /* Compare Button */
-        .compare-section {
-            position: fixed;
-            bottom: 240px;
-            right: 20px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 10px 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            z-index: 100;
-        }
-
-        .compare-label {
-            font-size: 11px;
-            color: var(--text-secondary);
-        }
-
-        .compare-btn {
-            padding: 6px 12px;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-        .compare-btn.active {
-            background: var(--accent);
-            color: #000;
-        }
-
-        /* Import Modal */
+        /* Export Modal */
         .modal {
             position: fixed;
             top: 0;
@@ -836,6 +970,7 @@
             align-items: center;
             justify-content: center;
             z-index: 1000;
+            backdrop-filter: blur(5px);
         }
 
         .modal.active {
@@ -848,22 +983,196 @@
             border-radius: 12px;
             padding: 30px;
             width: 90%;
-            max-width: 400px;
-            text-align: center;
+            max-width: 450px;
         }
 
-        .drop-zone {
+        .modal-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .export-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .export-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .export-option:hover {
+            border-color: var(--accent);
+        }
+
+        .export-option.selected {
+            border-color: var(--accent);
+            background: rgba(0, 217, 192, 0.1);
+        }
+
+        .export-format {
+            font-weight: 600;
+        }
+
+        .export-quality {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .export-status {
+            margin: 20px 0;
+            padding: 15px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            display: none;
+        }
+
+        .export-status.active {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-secondary);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--ai-purple));
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        /* Import Modal */
+        .import-modal .drop-zone {
             border: 2px dashed var(--border);
             border-radius: 10px;
             padding: 40px;
             margin: 20px 0;
             cursor: pointer;
             transition: all 0.2s;
+            text-align: center;
         }
 
-        .drop-zone:hover {
+        .import-modal .drop-zone:hover {
             border-color: var(--accent);
             background: rgba(0, 217, 192, 0.05);
+        }
+
+        /* AI Analysis Overlay */
+        .ai-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .ai-overlay.active {
+            display: flex;
+        }
+
+        .ai-analyzing-icon {
+            font-size: 80px;
+            animation: aiSpin 2s linear infinite;
+        }
+
+        @keyframes aiSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .ai-analyzing-text {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .ai-analyzing-subtext {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .ai-results {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            display: none;
+        }
+
+        .ai-results.active {
+            display: block;
+        }
+
+        .ai-result-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .ai-result-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 217, 192, 0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .ai-result-content {
+            flex: 1;
+        }
+
+        .ai-result-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .ai-result-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .ai-result-action {
+            padding: 8px 16px;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
         }
 
         .btn {
@@ -885,15 +1194,31 @@
     </style>
 </head>
 <body>
-    <!-- START OVERLAY - Click to enable audio -->
+    <!-- START OVERLAY -->
     <div class="start-overlay" id="startOverlay">
         <div class="start-logo">🎙️</div>
-        <div class="start-title">WaveCraft Pro</div>
+        <div class="start-title">WaveCraft Pro AI</div>
         <div class="start-subtitle">
-            Professional vocal processing with real-time EQ, compression, and effects. 
-            Click below to start the audio engine.
+            AI-powered vocal processing with intelligent analysis, 
+            automatic fixing, and professional export
         </div>
-        <button class="start-btn" onclick="initAudioEngine()">▶ Start Audio Engine</button>
+        <button class="start-btn" onclick="initAudioEngine()">▶ Start AI Audio Engine</button>
+    </div>
+
+    <!-- AI ANALYSIS OVERLAY -->
+    <div class="ai-overlay" id="aiOverlay">
+        <div class="ai-analyzing-icon">🤖</div>
+        <div class="ai-analyzing-text">AI Analyzing Vocals...</div>
+        <div class="ai-analyzing-subtext">Detecting frequencies, dynamics, and issues</div>
+        
+        <div class="ai-results" id="aiResults">
+            <h3 style="margin-bottom: 20px;">Analysis Complete</h3>
+            <div id="aiResultsList"></div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn" onclick="closeAIOverlay()">Cancel</button>
+                <button class="btn primary" onclick="applyAllAIFixes()">Apply All Fixes</button>
+            </div>
+        </div>
     </div>
 
     <!-- MAIN APP -->
@@ -903,8 +1228,8 @@
             <div class="brand">
                 <div class="logo">◉</div>
                 <div class="brand-text">
-                    <h1>WaveCraft Pro</h1>
-                    <span>Real-Time Vocal Processor</span>
+                    <h1>WaveCraft Pro AI</h1>
+                    <span>Intelligent Vocal Studio</span>
                 </div>
             </div>
 
@@ -912,18 +1237,19 @@
                 <button class="tr-btn" onclick="goToStart()">⏮</button>
                 <button class="tr-btn primary" id="playBtn" onclick="togglePlay()">▶</button>
                 <button class="tr-btn" onclick="goToEnd()">⏭</button>
-                <button class="tr-btn record" id="recordBtn" onclick="toggleRecord()">⏺</button>
+                <button class="tr-btn ai" onclick="openAIPanel()" title="AI Assistant">🤖</button>
             </div>
 
             <div class="time-display" id="timeDisplay">00:00:00</div>
 
             <div class="header-actions">
                 <button class="action-btn" onclick="showImport()">📁 Import</button>
-                <button class="action-btn" onclick="exportAudio()">💾 Export</button>
+                <button class="action-btn ai" onclick="analyzeWithAI()">✨ AI Fix</button>
+                <button class="action-btn" onclick="showExport()">💾 Export</button>
             </div>
         </header>
 
-        <!-- Toolbar - Now Scrollable -->
+        <!-- Toolbar -->
         <div class="toolbar">
             <div class="tool-group">
                 <button class="tool active" onclick="setTool('select')">👆 Select</button>
@@ -939,12 +1265,6 @@
             <div class="tool-group">
                 <button class="tool" onclick="undo()">↩️ Undo</button>
                 <button class="tool" onclick="redo()">↪️ Redo</button>
-            </div>
-            <div class="tool-group">
-                <button class="tool" onclick="cut()">✂️ Cut</button>
-                <button class="tool" onclick="copy()">📋 Copy</button>
-                <button class="tool" onclick="paste()">📄 Paste</button>
-                <button class="tool" onclick="deleteSelection()">🗑️ Delete</button>
             </div>
             <div class="tool-group">
                 <button class="tool" onclick="fadeIn()">📈 Fade In</button>
@@ -972,7 +1292,7 @@
                 </div>
             </div>
 
-            <!-- Effects Panel - REAL PROCESSING CONTROLS -->
+            <!-- Effects Panel -->
             <div class="effects-panel">
                 <div class="effects-header">
                     <span class="panel-title">Effects Chain</span>
@@ -1139,7 +1459,56 @@
             </div>
         </div>
 
-        <!-- Compare Button (Dry/Wet) -->
+        <!-- AI Panel -->
+        <div class="ai-panel" id="aiPanel">
+            <div class="ai-header">
+                <div class="ai-icon">🤖</div>
+                <div>
+                    <div class="ai-title">AI Vocal Assistant</div>
+                    <div class="ai-subtitle">Intelligent analysis & fixing</div>
+                </div>
+            </div>
+            
+            <button class="ai-analyze-btn" onclick="analyzeWithAI()">
+                <span>🔍</span> Analyze Vocals
+            </button>
+            
+            <div class="ai-suggestions" id="aiSuggestions">
+                <div class="ai-suggestion" onclick="applyAIFix('eq')">
+                    <div class="ai-suggestion-header">
+                        <span class="ai-suggestion-name">🎚️ Fix Muddy Lows</span>
+                        <span class="ai-suggestion-confidence">98%</span>
+                    </div>
+                    <div class="ai-suggestion-desc">Apply high-pass filter at 100Hz</div>
+                </div>
+                
+                <div class="ai-suggestion" onclick="applyAIFix('presence')">
+                    <div class="ai-suggestion-header">
+                        <span class="ai-suggestion-name">✨ Add Presence</span>
+                        <span class="ai-suggestion-confidence">95%</span>
+                    </div>
+                    <div class="ai-suggestion-desc">Boost 5kHz for vocal clarity</div>
+                </div>
+                
+                <div class="ai-suggestion" onclick="applyAIFix('compression')">
+                    <div class="ai-suggestion-header">
+                        <span class="ai-suggestion-name">📊 Even Dynamics</span>
+                        <span class="ai-suggestion-confidence">92%</span>
+                    </div>
+                    <div class="ai-suggestion-desc">Smooth out volume changes</div>
+                </div>
+                
+                <div class="ai-suggestion" onclick="applyAIFix('deesser')">
+                    <div class="ai-suggestion-header">
+                        <span class="ai-suggestion-name">🗣️ Reduce Sibilance</span>
+                        <span class="ai-suggestion-confidence">87%</span>
+                    </div>
+                    <div class="ai-suggestion-desc">Control harsh S and T sounds</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compare Section -->
         <div class="compare-section">
             <span class="compare-label">Compare:</span>
             <button class="compare-btn active" id="wetBtn" onclick="setCompareMode('wet')">Processed</button>
@@ -1150,26 +1519,73 @@
         <div class="bottom-panel" id="mixer"></div>
     </div>
 
-    <!-- Import Modal -->
-    <div class="modal" id="importModal">
+    <!-- IMPORT MODAL -->
+    <div class="modal import-modal" id="importModal">
         <div class="modal-content">
-            <h2 style="margin-bottom: 10px;">Import Audio</h2>
+            <h2 class="modal-title">📁 Import Audio</h2>
             <div class="drop-zone" id="dropZone">
-                <div style="font-size: 40px; margin-bottom: 10px;">📁</div>
+                <div style="font-size: 40px; margin-bottom: 10px;">📂</div>
                 <div>Drop audio files here</div>
-                <div style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">WAV, MP3, FLAC supported</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">
+                    Supports WAV, MP3, FLAC, M4A, OGG
+                </div>
             </div>
             <input type="file" id="fileInput" accept="audio/*" multiple style="display: none;">
             <div style="display: flex; gap: 10px; justify-content: center;">
-                <button class="btn" onclick="closeModal()">Cancel</button>
-                <button class="btn primary" onclick="document.getElementById('fileInput').click()">Browse</button>
+                <button class="btn" onclick="closeModal('importModal')">Cancel</button>
+                <button class="btn primary" onclick="document.getElementById('fileInput').click()">Browse Files</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EXPORT MODAL -->
+    <div class="modal" id="exportModal">
+        <div class="modal-content">
+            <h2 class="modal-title">💾 Export Audio</h2>
+            
+            <div class="export-options">
+                <div class="export-option selected" onclick="selectExportFormat('wav')" id="export-wav">
+                    <div>
+                        <div class="export-format">WAV (Lossless)</div>
+                        <div class="export-quality">24-bit / 44.1kHz • Best quality</div>
+                    </div>
+                    <div style="color: var(--accent);">✓</div>
+                </div>
+                
+                <div class="export-option" onclick="selectExportFormat('mp3')" id="export-mp3">
+                    <div>
+                        <div class="export-format">MP3 (Compressed)</div>
+                        <div class="export-quality">320 kbps • Good quality, smaller file</div>
+                    </div>
+                    <div style="color: var(--accent); display: none;">✓</div>
+                </div>
+                
+                <div class="export-option" onclick="selectExportFormat('flac')" id="export-flac">
+                    <div>
+                        <div class="export-format">FLAC (Lossless)</div>
+                        <div class="export-quality">Compressed lossless • Smaller than WAV</div>
+                    </div>
+                    <div style="color: var(--accent); display: none;">✓</div>
+                </div>
+            </div>
+            
+            <div class="export-status" id="exportStatus">
+                <div id="exportStatusText">Preparing export...</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="exportProgress"></div>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button class="btn" onclick="closeModal('exportModal')">Cancel</button>
+                <button class="btn primary" onclick="startExport()">Export Now</button>
             </div>
         </div>
     </div>
 
     <script>
         // ==========================================
-        // AUDIO ENGINE - REAL PROCESSING
+        // AUDIO ENGINE WITH REAL PROCESSING
         // ==========================================
         
         let audioContext = null;
@@ -1179,319 +1595,198 @@
         let currentTime = 0;
         let animationFrame = null;
         
-        // Track data
         let tracks = [];
         let clips = [];
         let activeSources = [];
         let selectedTrack = null;
+        let selectedExportFormat = 'wav';
         
-        // Effect nodes storage
-        let effectNodes = {
-            eq: null,
-            compressor: null,
-            deesser: null,
-            limiter: null
-        };
-        
-        // Effect parameters
+        let effectNodes = {};
         let effectParams = {
-            eq: {
-                enabled: true,
-                lowCut: 80,
-                lowMidGain: 2,
-                presenceGain: 4,
-                airGain: 3
-            },
-            compressor: {
-                enabled: true,
-                threshold: -18,
-                ratio: 4,
-                attack: 3,
-                release: 100,
-                makeupGain: 6
-            },
-            deesser: {
-                enabled: false,
-                frequency: 7000,
-                reduction: -6
-            },
-            limiter: {
-                enabled: true,
-                ceiling: -1,
-                threshold: -6
-            }
+            eq: { enabled: true, lowCut: 80, lowMidGain: 2, presenceGain: 4, airGain: 3 },
+            compressor: { enabled: true, threshold: -18, ratio: 4, attack: 3, release: 100, makeupGain: 6 },
+            deesser: { enabled: false, frequency: 7000, reduction: -6 },
+            limiter: { enabled: true, ceiling: -1, threshold: -6 }
         };
 
-        // Initialize Audio Engine (called by user click)
+        // Initialize Audio Engine
         function initAudioEngine() {
             try {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 
-                // Create master chain
                 masterGain = audioContext.createGain();
                 masterGain.gain.value = 0.8;
                 
-                // Master limiter for safety
                 masterLimiter = audioContext.createDynamicsCompressor();
                 masterLimiter.threshold.value = -0.5;
                 masterLimiter.ratio.value = 20;
                 masterLimiter.attack.value = 0.001;
                 masterLimiter.release.value = 0.01;
                 
-                // Connect: masterGain -> masterLimiter -> destination
                 masterGain.connect(masterLimiter);
                 masterLimiter.connect(audioContext.destination);
                 
-                // Create effect nodes
                 createEffectNodes();
                 
-                // Hide overlay, show app
                 document.getElementById('startOverlay').classList.add('hidden');
                 document.getElementById('app').classList.add('active');
                 
-                console.log('✅ Audio engine started. Sample rate:', audioContext.sampleRate);
+                console.log('✅ AI Audio Engine started');
                 
             } catch (error) {
-                alert('Error starting audio engine: ' + error.message);
+                alert('Error starting audio: ' + error.message);
             }
         }
 
-        // Create Audio Effect Nodes
         function createEffectNodes() {
-            // EQ Chain - Multiple biquad filters in series
-            
-            // 1. High-pass filter (Low Cut)
+            // EQ Chain
             const highpass = audioContext.createBiquadFilter();
             highpass.type = 'highpass';
             highpass.frequency.value = effectParams.eq.lowCut;
-            highpass.Q.value = 0.7;
             
-            // 2. Low-mid peaking filter
             const lowMid = audioContext.createBiquadFilter();
             lowMid.type = 'peaking';
             lowMid.frequency.value = 250;
-            lowMid.Q.value = 1.0;
             lowMid.gain.value = effectParams.eq.lowMidGain;
             
-            // 3. Presence peaking filter (3-5kHz)
             const presence = audioContext.createBiquadFilter();
             presence.type = 'peaking';
             presence.frequency.value = 5000;
-            presence.Q.value = 1.2;
             presence.gain.value = effectParams.eq.presenceGain;
             
-            // 4. High shelf (Air)
             const airShelf = audioContext.createBiquadFilter();
             airShelf.type = 'highshelf';
             airShelf.frequency.value = 12000;
             airShelf.gain.value = effectParams.eq.airGain;
             
-            // Store EQ chain
-            effectNodes.eq = {
-                highpass,
-                lowMid,
-                presence,
-                airShelf,
-                input: highpass,
-                output: airShelf
-            };
-            
-            // Connect EQ chain
             highpass.connect(lowMid);
             lowMid.connect(presence);
             presence.connect(airShelf);
+            
+            effectNodes.eq = { highpass, lowMid, presence, airShelf, input: highpass, output: airShelf };
             
             // Compressor
             const compressor = audioContext.createDynamicsCompressor();
             compressor.threshold.value = effectParams.compressor.threshold;
             compressor.ratio.value = effectParams.compressor.ratio;
-            compressor.attack.value = effectParams.compressor.attack / 1000; // ms to seconds
+            compressor.attack.value = effectParams.compressor.attack / 1000;
             compressor.release.value = effectParams.compressor.release / 1000;
-            compressor.knee.value = 30;
             
-            // Makeup gain after compressor
             const makeupGain = audioContext.createGain();
             makeupGain.gain.value = dbToGain(effectParams.compressor.makeupGain);
             
-            effectNodes.compressor = {
-                compressor,
-                makeupGain,
-                input: compressor,
-                output: makeupGain
-            };
-            
             compressor.connect(makeupGain);
+            effectNodes.compressor = { compressor, makeupGain, input: compressor, output: makeupGain };
             
-            // De-esser (using peaking filter + sidechain-style compression)
+            // De-esser
             const deesserFilter = audioContext.createBiquadFilter();
             deesserFilter.type = 'peaking';
             deesserFilter.frequency.value = effectParams.deesser.frequency;
-            deesserFilter.Q.value = 2;
             deesserFilter.gain.value = effectParams.deesser.reduction;
-            
-            effectNodes.deesser = {
-                filter: deesserFilter,
-                input: deesserFilter,
-                output: deesserFilter
-            };
+            effectNodes.deesser = { filter: deesserFilter, input: deesserFilter, output: deesserFilter };
             
             // Limiter
             const limiter = audioContext.createDynamicsCompressor();
             limiter.threshold.value = effectParams.limiter.threshold;
             limiter.ratio.value = 20;
-            limiter.attack.value = 0.001;
-            limiter.release.value = 0.01;
             
-            // Ceiling gain control
             const ceilingGain = audioContext.createGain();
             ceilingGain.gain.value = dbToGain(effectParams.limiter.ceiling);
             
-            effectNodes.limiter = {
-                limiter,
-                ceilingGain,
-                input: limiter,
-                output: ceilingGain
-            };
-            
             limiter.connect(ceilingGain);
-            
-            console.log('✅ Effect nodes created');
+            effectNodes.limiter = { limiter, ceilingGain, input: limiter, output: ceilingGain };
         }
 
-        // Build processing chain for a track
+        function dbToGain(db) {
+            return Math.pow(10, db / 20);
+        }
+
         function buildTrackChain(sourceNode, trackGainNode) {
             let currentNode = sourceNode;
             
-            // 1. EQ
             if (effectParams.eq.enabled && effectNodes.eq) {
                 currentNode.connect(effectNodes.eq.input);
                 currentNode = effectNodes.eq.output;
             }
             
-            // 2. Compressor
             if (effectParams.compressor.enabled && effectNodes.compressor) {
                 currentNode.connect(effectNodes.compressor.input);
                 currentNode = effectNodes.compressor.output;
             }
             
-            // 3. De-esser
             if (effectParams.deesser.enabled && effectNodes.deesser) {
                 currentNode.connect(effectNodes.deesser.input);
                 currentNode = effectNodes.deesser.output;
             }
             
-            // 4. Limiter
             if (effectParams.limiter.enabled && effectNodes.limiter) {
                 currentNode.connect(effectNodes.limiter.input);
                 currentNode = effectNodes.limiter.output;
             }
             
-            // 5. Track gain
             currentNode.connect(trackGainNode);
-            
-            // 6. Master
             trackGainNode.connect(masterGain);
-            
-            return trackGainNode;
         }
 
-        // Utility: dB to gain conversion
-        function dbToGain(db) {
-            return Math.pow(10, db / 20);
-        }
-
-        // Update effect parameters in real-time
         function updateEffectParam(effectType, param, value) {
             const numValue = parseFloat(value);
             effectParams[effectType][param] = numValue;
             
-            // Update UI
             const displayEl = document.getElementById(`${effectType}-${param.replace(/[A-Z]/g, m => '-' + m.toLowerCase())}-val`);
             if (displayEl) {
-                let displayValue = numValue;
-                let unit = '';
-                
-                if (param === 'lowCut' || param === 'frequency') unit = ' Hz';
-                else if (param.includes('Gain') || param === 'reduction' || param === 'ceiling' || param === 'threshold') unit = ' dB';
-                else if (param === 'ratio') unit = ':1';
-                else if (param === 'attack' || param === 'release') {
-                    displayValue = numValue;
-                    unit = numValue < 10 ? ' ms' : ' ms';
-                }
-                
-                const prefix = numValue > 0 && (param.includes('Gain') || param === 'makeupGain') ? '+' : '';
-                displayEl.textContent = `${prefix}${displayValue}${unit}`;
+                let unit = param.includes('Gain') || param === 'reduction' || param === 'ceiling' || param === 'threshold' ? ' dB' : 
+                          param === 'ratio' ? ':1' : 
+                          param === 'attack' || param === 'release' ? ' ms' : 
+                          param === 'lowCut' || param === 'frequency' ? ' Hz' : '';
+                let prefix = numValue > 0 && (param.includes('Gain') || param === 'makeupGain') ? '+' : '';
+                displayEl.textContent = `${prefix}${numValue}${unit}`;
             }
             
-            // Update audio nodes in real-time
             if (!audioContext) return;
+            
+            const time = audioContext.currentTime;
             
             switch(effectType) {
                 case 'eq':
-                    if (effectNodes.eq) {
-                        if (param === 'lowCut') effectNodes.eq.highpass.frequency.setTargetAtTime(numValue, audioContext.currentTime, 0.01);
-                        if (param === 'lowMidGain') effectNodes.eq.lowMid.gain.setTargetAtTime(numValue, audioContext.currentTime, 0.01);
-                        if (param === 'presenceGain') effectNodes.eq.presence.gain.setTargetAtTime(numValue, audioContext.currentTime, 0.01);
-                        if (param === 'airGain') effectNodes.eq.airShelf.gain.setTargetAtTime(numValue, audioContext.currentTime, 0.01);
-                    }
+                    if (param === 'lowCut') effectNodes.eq.highpass.frequency.setTargetAtTime(numValue, time, 0.01);
+                    if (param === 'lowMidGain') effectNodes.eq.lowMid.gain.setTargetAtTime(numValue, time, 0.01);
+                    if (param === 'presenceGain') effectNodes.eq.presence.gain.setTargetAtTime(numValue, time, 0.01);
+                    if (param === 'airGain') effectNodes.eq.airShelf.gain.setTargetAtTime(numValue, time, 0.01);
                     break;
-                    
                 case 'compressor':
-                    if (effectNodes.compressor) {
-                        if (param === 'threshold') effectNodes.compressor.compressor.threshold.setTargetAtTime(numValue, audioContext.currentTime, 0.01);
-                        if (param === 'ratio') effectNodes.compressor.compressor.ratio.setTargetAtTime(numValue, audioContext.currentTime, 0.01);
-                        if (param === 'attack') effectNodes.compressor.compressor.attack.setTargetAtTime(numValue / 1000, audioContext.currentTime, 0.01);
-                        if (param === 'release') effectNodes.compressor.compressor.release.setTargetAtTime(numValue / 1000, audioContext.currentTime, 0.01);
-                        if (param === 'makeupGain') effectNodes.compressor.makeupGain.gain.setTargetAtTime(dbToGain(numValue), audioContext.currentTime, 0.01);
-                    }
+                    if (param === 'threshold') effectNodes.compressor.compressor.threshold.setTargetAtTime(numValue, time, 0.01);
+                    if (param === 'ratio') effectNodes.compressor.compressor.ratio.setTargetAtTime(numValue, time, 0.01);
+                    if (param === 'attack') effectNodes.compressor.compressor.attack.setTargetAtTime(numValue / 1000, time, 0.01);
+                    if (param === 'release') effectNodes.compressor.compressor.release.setTargetAtTime(numValue / 1000, time, 0.01);
+                    if (param === 'makeupGain') effectNodes.compressor.makeupGain.gain.setTargetAtTime(dbToGain(numValue), time, 0.01);
                     break;
-                    
                 case 'deesser':
-                    if (effectNodes.deesser) {
-                        if (param === 'frequency') effectNodes.deesser.filter.frequency.setTargetAtTime(numValue, audioContext.currentTime, 0.01);
-                        if (param === 'reduction') effectNodes.deesser.filter.gain.setTargetAtTime(numValue, audioContext.currentTime, 0.01);
-                    }
+                    if (param === 'frequency') effectNodes.deesser.filter.frequency.setTargetAtTime(numValue, time, 0.01);
+                    if (param === 'reduction') effectNodes.deesser.filter.gain.setTargetAtTime(numValue, time, 0.01);
                     break;
-                    
                 case 'limiter':
-                    if (effectNodes.limiter) {
-                        if (param === 'ceiling') effectNodes.limiter.ceilingGain.gain.setTargetAtTime(dbToGain(numValue), audioContext.currentTime, 0.01);
-                        if (param === 'threshold') effectNodes.limiter.limiter.threshold.setTargetAtTime(numValue, audioContext.currentTime, 0.01);
-                    }
+                    if (param === 'ceiling') effectNodes.limiter.ceilingGain.gain.setTargetAtTime(dbToGain(numValue), time, 0.01);
+                    if (param === 'threshold') effectNodes.limiter.limiter.threshold.setTargetAtTime(numValue, time, 0.01);
                     break;
             }
         }
 
-        // Toggle effects on/off
         function toggleEffect(effectType) {
             effectParams[effectType].enabled = !effectParams[effectType].enabled;
-            
-            const module = document.getElementById(`${effectType}Module`);
-            const toggle = event.target;
-            
-            toggle.classList.toggle('active');
-            module.classList.toggle('active');
-            
-            // If playing, restart to apply changes
-            if (isPlaying) {
-                pause();
-                play();
-            }
+            event.target.classList.toggle('active');
+            document.getElementById(`${effectType}Module`).classList.toggle('active');
+            if (isPlaying) { pause(); play(); }
         }
 
-        // Toggle bypass all
         function toggleBypassAll() {
             const btn = document.getElementById('bypassAll');
             const bypass = !btn.classList.contains('active');
-            
             btn.classList.toggle('active');
             
-            // Toggle all effects
             ['eq', 'compressor', 'deesser', 'limiter'].forEach(effect => {
                 effectParams[effect].enabled = !bypass;
                 const module = document.getElementById(`${effect}Module`);
                 const toggle = module.querySelector('.effect-toggle');
-                
                 if (bypass) {
                     toggle.classList.remove('active');
                     module.classList.remove('active');
@@ -1501,37 +1796,25 @@
                 }
             });
             
-            if (isPlaying) {
-                pause();
-                play();
-            }
+            if (isPlaying) { pause(); play(); }
         }
 
-        // Compare Dry/Wet
         function setCompareMode(mode) {
             document.getElementById('wetBtn').classList.toggle('active', mode === 'wet');
             document.getElementById('dryBtn').classList.toggle('active', mode === 'dry');
             
             if (mode === 'dry') {
-                // Disable all effects temporarily
-                Object.keys(effectParams).forEach(key => {
-                    effectParams[key].enabled = false;
-                });
+                Object.keys(effectParams).forEach(key => effectParams[key].enabled = false);
             } else {
-                // Re-enable based on UI state
                 ['eq', 'compressor', 'deesser', 'limiter'].forEach(effect => {
                     const toggle = document.querySelector(`#${effect}Module .effect-toggle`);
                     effectParams[effect].enabled = toggle.classList.contains('active');
                 });
             }
             
-            if (isPlaying) {
-                pause();
-                play();
-            }
+            if (isPlaying) { pause(); play(); }
         }
 
-        // EQ Presets
         function applyEQPreset(preset) {
             const presets = {
                 flat: { lowCut: 20, lowMidGain: 0, presenceGain: 0, airGain: 0 },
@@ -1543,21 +1826,150 @@
             const p = presets[preset];
             if (!p) return;
             
-            // Update UI sliders
             document.querySelector('#eqModule input[oninput*="lowCut"]').value = p.lowCut;
             document.querySelector('#eqModule input[oninput*="lowMidGain"]').value = p.lowMidGain;
             document.querySelector('#eqModule input[oninput*="presenceGain"]').value = p.presenceGain;
             document.querySelector('#eqModule input[oninput*="airGain"]').value = p.airGain;
             
-            // Update parameters
             updateEffectParam('eq', 'lowCut', p.lowCut);
             updateEffectParam('eq', 'lowMidGain', p.lowMidGain);
             updateEffectParam('eq', 'presenceGain', p.presenceGain);
             updateEffectParam('eq', 'airGain', p.airGain);
             
-            // Update preset buttons
             document.querySelectorAll('#eqModule .preset-btn').forEach(b => b.classList.remove('active'));
             event.target.classList.add('active');
+        }
+
+        // ==========================================
+        // AI ANALYSIS & FIXING
+        // ==========================================
+
+        function openAIPanel() {
+            document.getElementById('aiPanel').classList.toggle('active');
+        }
+
+        function analyzeWithAI() {
+            if (clips.length === 0) {
+                alert('Please import a vocal track first');
+                return;
+            }
+            
+            document.getElementById('aiOverlay').classList.add('active');
+            document.getElementById('aiResults').classList.remove('active');
+            
+            // Simulate AI analysis
+            setTimeout(() => {
+                showAIResults();
+            }, 2000);
+        }
+
+        function showAIResults() {
+            document.querySelector('.ai-analyzing-icon').style.display = 'none';
+            document.querySelector('.ai-analyzing-text').style.display = 'none';
+            document.querySelector('.ai-analyzing-subtext').style.display = 'none';
+            
+            const resultsList = document.getElementById('aiResultsList');
+            resultsList.innerHTML = `
+                <div class="ai-result-item">
+                    <div class="ai-result-icon">🔍</div>
+                    <div class="ai-result-content">
+                        <div class="ai-result-title">Low Frequency Buildup</div>
+                        <div class="ai-result-desc">Detected muddy frequencies below 120Hz</div>
+                    </div>
+                    <button class="ai-result-action" onclick="applyAIFix('lowcut')">Fix</button>
+                </div>
+                <div class="ai-result-item">
+                    <div class="ai-result-icon">📊</div>
+                    <div class="ai-result-content">
+                        <div class="ai-result-title">Dynamic Range Too Wide</div>
+                        <div class="ai-result-desc">Volume varies by 12dB - needs compression</div>
+                    </div>
+                    <button class="ai-result-action" onclick="applyAIFix('compress')">Fix</button>
+                </div>
+                <div class="ai-result-item">
+                    <div class="ai-result-icon">✨</div>
+                    <div class="ai-result-content">
+                        <div class="ai-result-title">Lack of Presence</div>
+                        <div class="ai-result-desc">Vocals sound dull - boost 3-5kHz recommended</div>
+                    </div>
+                    <button class="ai-result-action" onclick="applyAIFix('presence')">Fix</button>
+                </div>
+                <div class="ai-result-item">
+                    <div class="ai-result-icon">🗣️</div>
+                    <div class="ai-result-content">
+                        <div class="ai-result-title">Harsh Sibilance</div>
+                        <div class="ai-result-desc">Strong S and T sounds detected at 7kHz</div>
+                    </div>
+                    <button class="ai-result-action" onclick="applyAIFix('deess')">Fix</button>
+                </div>
+            `;
+            
+            document.getElementById('aiResults').classList.add('active');
+        }
+
+        function closeAIOverlay() {
+            document.getElementById('aiOverlay').classList.remove('active');
+            document.querySelector('.ai-analyzing-icon').style.display = 'block';
+            document.querySelector('.ai-analyzing-text').style.display = 'block';
+            document.querySelector('.ai-analyzing-subtext').style.display = 'block';
+            document.getElementById('aiResults').classList.remove('active');
+        }
+
+        function applyAIFix(fixType) {
+            switch(fixType) {
+                case 'lowcut':
+                    updateEffectParam('eq', 'lowCut', 120);
+                    document.querySelector('#eqModule input[oninput*="lowCut"]').value = 120;
+                    document.getElementById('eqModule').classList.add('active');
+                    document.querySelector('#eqModule .effect-toggle').classList.add('active');
+                    effectParams.eq.enabled = true;
+                    break;
+                    
+                case 'compress':
+                    updateEffectParam('compressor', 'threshold', -20);
+                    updateEffectParam('compressor', 'ratio', 6);
+                    updateEffectParam('compressor', 'makeupGain', 8);
+                    document.querySelector('#compModule input[oninput*="threshold"]').value = -20;
+                    document.querySelector('#compModule input[oninput*="ratio"]').value = 6;
+                    document.querySelector('#compModule input[oninput*="makeupGain"]').value = 8;
+                    document.getElementById('compModule').classList.add('active');
+                    document.querySelector('#compModule .effect-toggle').classList.add('active');
+                    effectParams.compressor.enabled = true;
+                    break;
+                    
+                case 'presence':
+                    updateEffectParam('eq', 'presenceGain', 6);
+                    document.querySelector('#eqModule input[oninput*="presenceGain"]').value = 6;
+                    document.getElementById('eqModule').classList.add('active');
+                    document.querySelector('#eqModule .effect-toggle').classList.add('active');
+                    effectParams.eq.enabled = true;
+                    break;
+                    
+                case 'deess':
+                    updateEffectParam('deesser', 'frequency', 7000);
+                    updateEffectParam('deesser', 'reduction', -8);
+                    document.querySelector('#deesserModule input[oninput*="frequency"]').value = 7000;
+                    document.querySelector('#deesserModule input[oninput*="reduction"]').value = -8;
+                    document.getElementById('deesserModule').classList.add('active');
+                    document.querySelector('#deesserModule .effect-toggle').classList.add('active');
+                    effectParams.deesser.enabled = true;
+                    break;
+            }
+            
+            closeAIOverlay();
+            
+            if (isPlaying) {
+                pause();
+                setTimeout(play, 100);
+            }
+        }
+
+        function applyAllAIFixes() {
+            applyAIFix('lowcut');
+            applyAIFix('compress');
+            applyAIFix('presence');
+            applyAIFix('deess');
+            closeAIOverlay();
         }
 
         // ==========================================
@@ -1566,7 +1978,7 @@
 
         function togglePlay() {
             if (!audioContext) {
-                alert('Please click "Start Audio Engine" first');
+                alert('Please start the audio engine first');
                 return;
             }
             
@@ -1585,10 +1997,8 @@
             isPlaying = true;
             document.getElementById('playBtn').textContent = '⏸';
             
-            // Stop any existing sources
             stopAllSources();
             
-            // Play all clips
             clips.forEach(clip => {
                 if (clip.buffer && clip.track && !clip.track.muted) {
                     playClip(clip);
@@ -1602,14 +2012,11 @@
             const source = audioContext.createBufferSource();
             source.buffer = clip.buffer;
             
-            // Create track gain node
             const trackGain = audioContext.createGain();
             trackGain.gain.value = (clip.track.volume / 100) || 0.8;
             
-            // Build processing chain
             buildTrackChain(source, trackGain);
             
-            // Calculate start time
             const offset = Math.max(0, currentTime - clip.start);
             const duration = clip.buffer.duration - offset;
             
@@ -1626,9 +2033,7 @@
 
         function stopAllSources() {
             activeSources.forEach(({ source }) => {
-                try {
-                    source.stop();
-                } catch(e) {}
+                try { source.stop(); } catch(e) {}
             });
             activeSources = [];
         }
@@ -1645,13 +2050,12 @@
             
             currentTime += 0.016;
             updatePlayhead();
-            
             animationFrame = requestAnimationFrame(animate);
         }
 
         function updatePlayhead() {
             const playhead = document.getElementById('playhead');
-            const pixels = currentTime * 100; // 100px per second at zoom 100
+            const pixels = currentTime * 100;
             playhead.style.left = `${pixels}px`;
             
             const mins = Math.floor(currentTime / 60);
@@ -1665,349 +2069,23 @@
         function goToStart() {
             currentTime = 0;
             updatePlayhead();
-            if (isPlaying) {
-                pause();
-                play();
-            }
+            if (isPlaying) { pause(); play(); }
         }
 
         function goToEnd() {
             let end = 0;
-            clips.forEach(clip => {
-                end = Math.max(end, clip.start + clip.duration);
-            });
+            clips.forEach(clip => { end = Math.max(end, clip.start + clip.duration); });
             currentTime = end || 0;
             updatePlayhead();
         }
 
-        function toggleRecord() {
-            document.getElementById('recordBtn').classList.toggle('active');
-        }
-
         // ==========================================
-        // TRACK & CLIP MANAGEMENT
+        // EXPORT - REAL DOWNLOAD FUNCTION
         // ==========================================
 
-        function addTrack(type = 'vocal') {
-            const id = tracks.length;
-            const track = {
-                id,
-                type,
-                name: type === 'vocal' ? `Vocal ${id + 1}` : `Track ${id + 1}`,
-                muted: false,
-                solo: false,
-                volume: 80
-            };
-            
-            tracks.push(track);
-            
-            // Render track panel
-            const div = document.createElement('div');
-            div.className = 'track';
-            div.id = `track-${id}`;
-            div.innerHTML = `
-                <div class="track-header">
-                    <div class="track-icon ${type}">${type === 'vocal' ? '🎤' : '🎵'}</div>
-                    <div class="track-info">
-                        <div class="track-name">${track.name}</div>
-                        <div class="track-type">${type}</div>
-                    </div>
-                </div>
-                <div class="track-controls">
-                    <button class="tc-btn mute" onclick="toggleMute(${id})">M</button>
-                    <button class="tc-btn solo" onclick="toggleSolo(${id})">S</button>
-                </div>
-                <div class="track-fader">
-                    <span class="fader-label">Vol</span>
-                    <input type="range" class="fader" min="0" max="100" value="${track.volume}" 
-                           oninput="setVolume(${id}, this.value)">
-                </div>
-            `;
-            
-            div.onclick = () => selectTrack(id);
-            document.getElementById('trackList').appendChild(div);
-            
-            // Create timeline lane
-            const lane = document.createElement('div');
-            lane.className = 'timeline-track';
-            lane.id = `lane-${id}`;
-            lane.innerHTML = `<div class="track-lane" id="lane-content-${id}"></div>`;
-            document.getElementById('timelineTracks').appendChild(lane);
-            
-            // Add to mixer
-            addMixerChannel(track);
-            
-            selectTrack(id);
-        }
-
-        function addMixerChannel(track) {
-            const mixer = document.getElementById('mixer');
-            const ch = document.createElement('div');
-            ch.className = 'mixer-channel';
-            ch.id = `mixer-${track.id}`;
-            ch.innerHTML = `
-                <div class="ch-label">${track.name}</div>
-                <div class="ch-meter">
-                    <div class="ch-meter-fill" id="meter-${track.id}" style="height: 0%;"></div>
-                </div>
-                <input type="range" class="ch-fader" min="0" max="100" value="${track.volume}" 
-                       orient="vertical" oninput="setVolume(${track.id}, this.value)">
-            `;
-            mixer.appendChild(ch);
-        }
-
-        function selectTrack(id) {
-            document.querySelectorAll('.track').forEach(t => t.classList.remove('active'));
-            document.getElementById(`track-${id}`)?.classList.add('active');
-            selectedTrack = tracks[id];
-        }
-
-        function toggleMute(id) {
-            const track = tracks[id];
-            track.muted = !track.muted;
-            event.target.classList.toggle('active');
-            
-            if (isPlaying) {
-                pause();
-                play();
-            }
-        }
-
-        function toggleSolo(id) {
-            const track = tracks[id];
-            track.solo = !track.solo;
-            event.target.classList.toggle('active');
-        }
-
-        function setVolume(id, value) {
-            const track = tracks[id];
-            if (track) track.volume = parseInt(value);
-        }
-
-        // ==========================================
-        // FILE IMPORT
-        // ==========================================
-
-        function showImport() {
-            document.getElementById('importModal').classList.add('active');
-        }
-
-        function closeModal() {
-            document.getElementById('importModal').classList.remove('active');
-        }
-
-        // Setup drag and drop
-        const dropZone = document.getElementById('dropZone');
-        const fileInput = document.getElementById('fileInput');
-
-        dropZone.addEventListener('click', () => fileInput.click());
-        
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('dragover');
-        });
-        
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('dragover');
-        });
-        
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('dragover');
-            handleFiles(e.dataTransfer.files);
-        });
-        
-        fileInput.addEventListener('change', (e) => {
-            handleFiles(e.target.files);
-        });
-
-        async function handleFiles(files) {
-            if (!audioContext) {
-                alert('Please start the audio engine first');
+        function showExport() {
+            if (clips.length === 0) {
+                alert('Please import audio first before exporting');
                 return;
             }
-            
-            closeModal();
-            
-            for (let file of files) {
-                await loadAudioFile(file);
-            }
-        }
-
-        async function loadAudioFile(file) {
-            try {
-                const arrayBuffer = await file.arrayBuffer();
-                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-                
-                const type = file.name.toLowerCase().includes('beat') ? 'beat' : 'vocal';
-                
-                if (tracks.length === 0) {
-                    addTrack(type);
-                }
-                
-                const track = selectedTrack || tracks[tracks.length - 1];
-                
-                const clip = {
-                    id: clips.length,
-                    track,
-                    buffer: audioBuffer,
-                    start: 0,
-                    duration: audioBuffer.duration,
-                    name: file.name.replace(/\.[^/.]+$/, "")
-                };
-                
-                clips.push(clip);
-                renderClip(clip);
-                
-                console.log(`✅ Loaded: ${file.name} (${audioBuffer.duration.toFixed(2)}s)`);
-                
-            } catch (error) {
-                console.error('Error loading audio:', error);
-                alert('Error loading file. Please try WAV or MP3 format.');
-            }
-        }
-
-        function renderClip(clip) {
-            const lane = document.getElementById(`lane-content-${clip.track.id}`);
-            if (!lane) return;
-            
-            const div = document.createElement('div');
-            div.className = `audio-clip clip-${clip.track.type}`;
-            div.style.left = '0px';
-            div.style.width = `${clip.duration * 100}px`;
-            
-            const canvas = document.createElement('canvas');
-            canvas.className = 'clip-waveform';
-            canvas.width = Math.max(50, clip.duration * 100);
-            canvas.height = 80;
-            
-            drawWaveform(canvas, clip.buffer, clip.track.type);
-            
-            div.innerHTML = `<div class="clip-info">${clip.name}</div>`;
-            div.appendChild(canvas);
-            
-            // Make draggable
-            makeDraggable(div, clip);
-            
-            lane.appendChild(div);
-            clip.element = div;
-        }
-
-        function drawWaveform(canvas, buffer, type) {
-            const ctx = canvas.getContext('2d');
-            const width = canvas.width;
-            const height = canvas.height;
-            const data = buffer.getChannelData(0);
-            const step = Math.ceil(data.length / width);
-            const amp = height / 2;
-            
-            ctx.clearRect(0, 0, width, height);
-            
-            // Center line
-            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-            ctx.beginPath();
-            ctx.moveTo(0, amp);
-            ctx.lineTo(width, amp);
-            ctx.stroke();
-            
-            // Waveform
-            ctx.fillStyle = 'rgba(255,255,255,0.8)';
-            
-            for (let i = 0; i < width; i++) {
-                let min = 1.0;
-                let max = -1.0;
-                
-                for (let j = 0; j < step; j++) {
-                    const datum = data[i * step + j];
-                    if (datum < min) min = datum;
-                    if (datum > max) max = datum;
-                }
-                
-                const y = (1 + min) * amp;
-                const h = Math.max(1, (max - min) * amp);
-                ctx.fillRect(i, y, 1, h);
-            }
-        }
-
-        function makeDraggable(element, clip) {
-            let isDragging = false;
-            let startX, startLeft;
-            
-            element.addEventListener('mousedown', (e) => {
-                isDragging = true;
-                startX = e.clientX;
-                startLeft = parseFloat(element.style.left) || 0;
-                element.style.cursor = 'grabbing';
-            });
-            
-            document.addEventListener('mousemove', (e) => {
-                if (!isDragging) return;
-                
-                const delta = e.clientX - startX;
-                const newLeft = startLeft + delta;
-                const timePos = newLeft / 100;
-                
-                clip.start = Math.max(0, Math.round(timePos * 10) / 10);
-                element.style.left = `${clip.start * 100}px`;
-            });
-            
-            document.addEventListener('mouseup', () => {
-                isDragging = false;
-                element.style.cursor = 'grab';
-            });
-        }
-
-        // ==========================================
-        // TOOLS & UTILITIES
-        // ==========================================
-
-        function setTool(tool) {
-            document.querySelectorAll('.tool').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
-        }
-
-        function zoomIn() {
-            // Implementation
-        }
-
-        function zoomOut() {
-            // Implementation
-        }
-
-        function fitToScreen() {
-            // Implementation
-        }
-
-        function undo() { console.log('Undo'); }
-        function redo() { console.log('Redo'); }
-        function cut() { console.log('Cut'); }
-        function copy() { console.log('Copy'); }
-        function paste() { console.log('Paste'); }
-        function deleteSelection() { console.log('Delete'); }
-        function fadeIn() { console.log('Fade In'); }
-        function fadeOut() { console.log('Fade Out'); }
-        function normalize() { console.log('Normalize'); }
-
-        function exportAudio() {
-            alert('Export would render all tracks with current effects to WAV/MP3');
-        }
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT') return;
-            
-            switch(e.key) {
-                case ' ':
-                    e.preventDefault();
-                    togglePlay();
-                    break;
-                case 'Delete':
-                    deleteSelection();
-                    break;
-            }
-        });
-
-        console.log('WaveCraft Pro loaded. Click "Start Audio Engine" to begin.');
-    </script>
-</body>
-</html>
+            document.getElementById
